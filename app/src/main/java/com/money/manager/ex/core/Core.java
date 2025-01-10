@@ -17,7 +17,9 @@
 
 package com.money.manager.ex.core;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -32,27 +34,20 @@ import android.text.style.StyleSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
 import com.money.manager.ex.Constants;
 import com.money.manager.ex.MmexApplication;
 import com.money.manager.ex.R;
-import com.money.manager.ex.core.database.DatabaseManager;
 import com.money.manager.ex.database.MmxOpenHelper;
 import com.money.manager.ex.domainmodel.Payee;
 import com.money.manager.ex.settings.AppSettings;
-import com.money.manager.ex.utils.MmxFileUtils;
 
-import java.io.File;
 import java.text.DateFormatSymbols;
 import java.text.Normalizer;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -81,7 +76,7 @@ public class Core {
      * @param textResourceId id of string to display as a message
      */
     public void alert(int textResourceId) {
-        alert(Constants.NOT_SET, textResourceId);
+        alert(Constants.NOT_SET_INT, textResourceId);
     }
 
     public void alert(int title, int text) {
@@ -89,14 +84,15 @@ public class Core {
             title = R.string.attention;
         }
 
-        new MaterialDialog.Builder(getContext())
-                .icon(new UIHelper(getContext()).getIcon(GoogleMaterial.Icon.gmd_warning))
-                .title(title)
-                .content(text)
-                .positiveText(android.R.string.ok)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
+        UIHelper ui = new UIHelper(getContext());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setIcon(ui.getIcon(GoogleMaterial.Icon.gmd_warning))
+                .setTitle(title)
+                .setMessage(text)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
                     }
                 })
@@ -148,7 +144,7 @@ public class Core {
         "ORDER BY C.TransDate DESC, C.TransId DESC " +
         "LIMIT 1";
 
-        Cursor cursor = openHelper.get().getReadableDatabase().rawQuery(sql, null);
+        Cursor cursor = openHelper.get().getReadableDatabase().query(sql);
 
         // check if cursor can be open
         if (cursor != null && cursor.moveToFirst()) {
@@ -254,7 +250,7 @@ public class Core {
      * @return true if running on the tablet, otherwise false
      */
     public boolean isTablet() {
-        int layout = getContext().getResources().getConfiguration().screenLayout;
+        long layout = getContext().getResources().getConfiguration().screenLayout;
         return ((layout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_LARGE) ||
                 ((layout & Configuration.SCREENLAYOUT_SIZE_MASK) == Configuration.SCREENLAYOUT_SIZE_XLARGE);
     }
@@ -275,7 +271,7 @@ public class Core {
     public boolean isToDisplayChangelog() {
         int currentVersionCode = getAppVersionCode();
         int lastVersionCode = PreferenceManager.getDefaultSharedPreferences(getContext())
-                .getInt(getContext().getString(R.string.pref_last_version_key), Constants.NOT_SET);
+                .getInt(getContext().getString(R.string.pref_last_version_key), Constants.NOT_SET_INT);
 
         return lastVersionCode != currentVersionCode;
     }
@@ -323,19 +319,17 @@ public class Core {
         // create changelog layout
         View view = LayoutInflater.from(getContext()).inflate(R.layout.changelog_layout, null);
 
-        // show changelog dialog
-        new MaterialDialog.Builder(getContext())
-            .cancelable(false)
-            .title(R.string.changelog)
-            .customView(view, true)
-            .neutralText(android.R.string.ok)
-            .onNeutral(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    dialog.dismiss();
-                }
-            })
-            .build().show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setCancelable(false)
+                .setTitle(R.string.changelog)
+                .setView(view)
+                .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .show();
 
         // mark as seen
         int currentVersionCode = getAppVersionCode();
@@ -346,12 +340,12 @@ public class Core {
         return true;
     }
 
-//    public int getColourFromStyledAttribute(int attribute) {
+//    public long getColourFromStyledAttribute(long attribute) {
 //        int[] attrs = { attribute };
 //        TypedArray ta = getContext().obtainStyledAttributes(getContext().getTheme(), attrs);
 //    }
 
-//    public int getColourFromThemeAttribute(int attribute) {
+//    public long getColourFromThemeAttribute(long attribute) {
 //        TypedValue typedValue = new TypedValue();
 //        getContext().getTheme().resolveAttribute(attribute, typedValue, true);
 //        return typedValue.resourceId;
@@ -366,7 +360,7 @@ public class Core {
 
 //        int[] arrayAttributes = new int[] { attribute };
 //        TypedArray typedArray = context.obtainStyledAttributes(arrayAttributes);
-//        int value = typedArray.getColor(0, context.getResources().getColor(R.color.abBackground));
+//        long value = typedArray.getColor(0, context.getResources().getColor(R.color.abBackground));
 //        typedArray.recycle();
 
         // Create an array of the attributes we want to resolve

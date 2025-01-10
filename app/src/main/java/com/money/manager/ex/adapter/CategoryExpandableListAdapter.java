@@ -28,149 +28,117 @@ import android.widget.ExpandableListView;
 import android.widget.ListView;
 
 import com.money.manager.ex.common.CategoryListActivity;
-import com.money.manager.ex.common.CategoryListFragment;
-import com.money.manager.ex.database.QueryCategorySubCategory;
 import com.money.manager.ex.domainmodel.Category;
+import com.money.manager.ex.nestedcategory.NestedCategoryListFragment;
 
-import java.util.HashMap;
 import java.util.List;
 
 import androidx.fragment.app.FragmentActivity;
 
 public class CategoryExpandableListAdapter
-	extends BaseExpandableListAdapter {
+        extends BaseExpandableListAdapter {
 
     public CategoryExpandableListAdapter(Context context, int layout,
                                          List<Category> categories,
-                                         HashMap<Category,
-                                                 List<QueryCategorySubCategory>> subCategories,
                                          boolean showSelector) {
         mContext = context;
         mLayout = layout;
         mCategories = categories;
-        mSubCategories = subCategories;
         mShowSelector = showSelector;
+        mUseNestedCategory = false;
     }
 
-	private final Context mContext;
-	private final int mLayout;
-	
-	private final List<Category> mCategories;
-	private final HashMap<Category, List<QueryCategorySubCategory>> mSubCategories;
-	
-	private int mIdGroupChecked = ListView.INVALID_POSITION;
-	private int mIdChildChecked = ListView.INVALID_POSITION;
+    public CategoryExpandableListAdapter(Context context, int layout,
+                                         List<Category> categories,
+                                         boolean showSelector,
+                                         Boolean source) {
+        mContext = context;
+        mLayout = layout;
+        mCategories = categories;
+        mShowSelector = showSelector;
+        mUseNestedCategory = source;
+    }
+
+    private final boolean mUseNestedCategory ;
+    private final Context mContext;
+    private final int mLayout;
+
+    private final List<Category> mCategories;
+
+    private long mIdGroupChecked = ListView.INVALID_POSITION;
+    private long mIdChildChecked = ListView.INVALID_POSITION;
 
     private final boolean mShowSelector;
 
     private final int[] expandedStateSet = {android.R.attr.state_expanded};
     private final int[] emptyStateSet = {};
 
-	@Override
-	public Object getChild(int groupPosition, int childPosition) {
-		if (groupPosition < mCategories.size()) {
-			Category category = mCategories.get(groupPosition);
-			List<QueryCategorySubCategory> categorySubCategories = mSubCategories.get(category);
-			if (childPosition < categorySubCategories.size()) {
-                return categorySubCategories.get(childPosition);
-            }
-		}
-		return null;
-	}
+    @Override
+    public Object getChild(int groupPosition, int childPosition) {
+        return null;
+    }
 
-	@Override
-	public long getChildId(int groupPosition, int childPosition) {
-		return childPosition;
-	}
+    @Override
+    public long getChildId(int groupPosition, int childPosition) {
+        return childPosition;
+    }
 
-	@Override
-	public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
-							 View convertView, ViewGroup parent) {
-		CategoryListItemViewHolderChild holder;
-		if (convertView == null) {
-			LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			convertView = inflater.inflate(mLayout, null);
-			
-			holder = new CategoryListItemViewHolderChild(convertView);
+    @Override
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
+                             View convertView, ViewGroup parent) {
+        CategoryListItemViewHolderChild holder;
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(mLayout, null);
 
-			convertView.setTag(holder);
-		} else {
+            holder = new CategoryListItemViewHolderChild(convertView);
+
+            convertView.setTag(holder);
+        } else {
             holder = (CategoryListItemViewHolderChild) convertView.getTag();
         }
-		
-		QueryCategorySubCategory entity = (QueryCategorySubCategory) getChild(groupPosition, childPosition);
-		if (entity == null) return convertView;
 
-        holder.text1.setText(entity.getSubcategoryName());
+        return convertView;
+    }
 
-        holder.text2.setText(entity.getCategName());
-        holder.text2.setTextColor(getContext().getResources().getColor(android.R.color.darker_gray));
+    @Override
+    public int getChildrenCount(int groupPosition) {
+        return 0;
+    }
 
-        // Selector. Always hidden on subcategories.
+    @Override
+    public Object getGroup(int groupPosition) {
+        return mCategories.get(groupPosition);
+    }
 
-//		if (mShowSelector) {
-//			holder.selector.setVisibility(View.VISIBLE);
-//			// set the tag to be the group position
-//			holder.selector.setTag(entity.getCategId() + ":" + entity.getSubCategId());
-//
-//			holder.selector.setOnClickListener(new View.OnClickListener() {
-//				@Override
-//				public void onClick(View v) {
-//					String tag = v.getTag().toString();
-//					String[] ids = tag.split(":");
-//					Integer groupId = Integer.parseInt(ids[0]);
-//					Integer childId = Integer.parseInt(ids[1]);
-//					setIdChildChecked(groupId, childId);
-//					// close
-//					closeFragment();
-//				}
-//			});
-//		} else {
-			holder.selector.setVisibility(View.GONE);
-//		}
+    @Override
+    public int getGroupCount() {
+        return mCategories.size();
+    }
 
-        // indent subcategory
-        holder.indent.setVisibility(View.VISIBLE);
+    @Override
+    public long getGroupId(int groupPosition) {
+        return groupPosition;
+    }
 
-		return convertView;
-	}
+    @Override
+    public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+        CategoryListItemViewHolderGroup holder;
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(mLayout, null);
 
-	@Override
-	public int getChildrenCount(int groupPosition) {
-		return mSubCategories.get(mCategories.get(groupPosition)).size();
-	}
+            holder = new CategoryListItemViewHolderGroup(convertView);
 
-	@Override
-	public Object getGroup(int groupPosition) {
-		return mCategories.get(groupPosition);
-	}
+            convertView.setTag(holder);
+        } else {
+            holder = (CategoryListItemViewHolderGroup) convertView.getTag();
+        }
 
-	@Override
-	public int getGroupCount() {
-		return mCategories.size();
-	}
-
-	@Override
-	public long getGroupId(int groupPosition) {
-		return groupPosition;
-	}
-
-	@Override
-	public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-		CategoryListItemViewHolderGroup holder;
-		if (convertView == null) {
-			LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			convertView = inflater.inflate(mLayout, null);
-			
-			holder = new CategoryListItemViewHolderGroup(convertView);
-
-			convertView.setTag(holder);
-		} else {
-			holder = (CategoryListItemViewHolderGroup)convertView.getTag();
-		}
-
-		// prevent exceptions. todo: Find out how this happens in the first place.
-		if (mCategories.size() == 0) return convertView;
+        // prevent exceptions. todo: Find out how this happens in the first place.
+        if (mCategories.isEmpty()) {
+            return convertView;
+        }
 
         Category category = mCategories.get(groupPosition);
 
@@ -187,7 +155,7 @@ public class CategoryExpandableListAdapter
                 @Override
                 public void onClick(View v) {
                     String tag = v.getTag().toString();
-                    Integer groupId = Integer.parseInt(tag);
+                    Long groupId = Long.parseLong(tag);
                     setIdGroupChecked(groupId);
                     // close
                     closeFragment();
@@ -208,9 +176,9 @@ public class CategoryExpandableListAdapter
 
             boolean hasChildren = getChildrenCount(groupPosition) != 0;
             if (!hasChildren) {
-                holder.collapseImageView.setVisibility( View.INVISIBLE );
+                holder.collapseImageView.setVisibility(View.INVISIBLE);
             } else {
-                holder.collapseImageView.setVisibility( View.VISIBLE );
+                holder.collapseImageView.setVisibility(View.VISIBLE);
 
                 if (drawable != null) {
                     drawable.setState(isExpanded ? expandedStateSet : emptyStateSet);
@@ -218,49 +186,50 @@ public class CategoryExpandableListAdapter
             }
         }
 
-		return convertView;
-	}
+        return convertView;
+    }
 
-	@Override
-	public boolean hasStableIds() {
-		return false;
-	}
+    @Override
+    public boolean hasStableIds() {
+        return false;
+    }
 
-	@Override
-	public boolean isChildSelectable(int groupPosition, int childPosition) {
-		return true;
-	}
-	
-	public int getIdGroupChecked() {
-		return mIdGroupChecked;
-	}
-	
-	public int getIdChildChecked() {
-		return mIdChildChecked;
-	}
-	
-	public void setIdGroupChecked(int idGroup) {
-		// If an existing group is clicked, collapse it. Reset the expanded id.
+    @Override
+    public boolean isChildSelectable(int groupPosition, int childPosition) {
+        return true;
+    }
+
+    public long getIdGroupChecked() {
+        return mIdGroupChecked;
+    }
+
+    public long getIdChildChecked() {
+        return mIdChildChecked;
+    }
+
+    public void setIdGroupChecked(long idGroup) {
+        // If an existing group is clicked, collapse it. Reset the expanded id.
 //        if (mIdGroupChecked == idGroup) {
 //            mIdGroupChecked = ListView.INVALID_POSITION;
 //        } else {
-		mIdGroupChecked = idGroup;
-		mIdChildChecked = ExpandableListView.INVALID_POSITION;
+        mIdGroupChecked = idGroup;
+        mIdChildChecked = ExpandableListView.INVALID_POSITION;
 //        }
-	}
-	
-	public void setIdChildChecked(int idGroup, int idChild) {
-		mIdGroupChecked = idGroup;
-		mIdChildChecked = idChild;
-	}
+    }
 
-	private void closeFragment() {
+    public void setIdChildChecked(long idGroup, long idChild) {
+        mIdGroupChecked = idGroup;
+        mIdChildChecked = idChild;
+    }
+
+    private void closeFragment() {
         FragmentActivity activity = (FragmentActivity) getContext();
-        CategoryListFragment fragment =
-            (CategoryListFragment) activity
-                .getSupportFragmentManager()
-                .findFragmentByTag(CategoryListActivity.FRAGMENTTAG);
-        fragment.setResultAndFinish();
+
+            NestedCategoryListFragment fragment =
+                    (NestedCategoryListFragment) activity
+                            .getSupportFragmentManager()
+                            .findFragmentByTag(CategoryListActivity.FRAGMENTTAG);
+            fragment.setResultAndFinish();
     }
 
     private Context getContext() {

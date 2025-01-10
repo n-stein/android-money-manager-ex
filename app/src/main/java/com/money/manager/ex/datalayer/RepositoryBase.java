@@ -52,11 +52,11 @@ public abstract class RepositoryBase<T extends EntityBase>
 
     private final Context context;
 
-    public int count(String selection, String[] args) {
+    public long count(String selection, String[] args) {
         Cursor c = openCursor(null, selection, args);
         if (c == null) return Constants.NOT_SET;
 
-        int result = c.getCount();
+        long result = c.getCount();
         c.close();
 
         return result;
@@ -84,7 +84,9 @@ public abstract class RepositoryBase<T extends EntityBase>
         }
     }
 
-    public int add(EntityBase entity) {
+    public long add(EntityBase entity) {
+//        if (entity.getId() == null || entity.getId() == Constants.NOT_SET)
+//            entity.setId(newId());
         return insert(entity.contentValues);
     }
 
@@ -146,14 +148,28 @@ public abstract class RepositoryBase<T extends EntityBase>
 
     // Protected
 
-    protected int bulkInsert(ContentValues[] items) {
+    protected long bulkInsert(ContentValues[] items) {
         return getContext().getContentResolver().bulkInsert(this.getUri(), items);
+    }
+
+    long newId() {
+        long ticks =  (System.currentTimeMillis());
+
+        long randomSuffix = (long) (Math.random() * 1000);
+
+        long id = (ticks * 1_000) + randomSuffix;
+
+        if (id < 0) {
+            throw new IllegalArgumentException("Generated ID exceeds long range");
+        }
+
+        return id;
     }
 
     /**
      * Generic insert method.
      */
-    protected int insert(ContentValues values) {
+    protected long insert(ContentValues values) {
         // sanitize
         values.remove("_id");
 
@@ -162,7 +178,7 @@ public abstract class RepositoryBase<T extends EntityBase>
 
         long id = ContentUris.parseId(insertUri);
 
-        return (int) id;
+        return id;
     }
 
     protected List<T> query(Class<T> resultType, String selection) {
@@ -177,7 +193,7 @@ public abstract class RepositoryBase<T extends EntityBase>
      * @return  Boolean indicating whether the operation was successful.
      */
     protected boolean update(EntityBase entity, String where) {
-        return update(entity, where, null);
+        return update(entity, where, new String[0]);
     }
 
     protected boolean update(EntityBase entity, String where, String[] selectionArgs) {
@@ -187,7 +203,7 @@ public abstract class RepositoryBase<T extends EntityBase>
         // remove "_id" from the values.
         values.remove("_id");
 
-        int updateResult = getContext().getContentResolver().update(this.getUri(),
+        long updateResult = getContext().getContentResolver().update(this.getUri(),
                 values,
                 where,
                 selectionArgs
@@ -223,8 +239,8 @@ public abstract class RepositoryBase<T extends EntityBase>
         return results;
     }
 
-    protected int delete(String where, String[] args) {
-        int result = getContext().getContentResolver().delete(this.getUri(),
+    protected long delete(String where, String[] args) {
+        long result = getContext().getContentResolver().delete(this.getUri(),
             where,
             args
         );

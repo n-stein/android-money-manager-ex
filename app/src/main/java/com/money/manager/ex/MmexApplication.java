@@ -16,6 +16,8 @@
  */
 package com.money.manager.ex;
 
+import static timber.log.Timber.plant;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -27,7 +29,7 @@ import androidx.preference.PreferenceManager;
 
 import com.amplitude.android.Amplitude;
 import com.amplitude.android.AmplitudeKt;
-import com.amplitude.android.DefaultTrackingOptions;
+import com.amplitude.android.TrackingOptions;
 import com.mikepenz.iconics.Iconics;
 import com.mikepenz.mmex_icon_font_typeface_library.MMXIconFont;
 import com.money.manager.ex.common.MoneyParcelConverter;
@@ -75,6 +77,7 @@ public class MmexApplication
     private static MmexApplication appInstance;
     private static float mTextSize;
     private static String userName = "";
+    private String mPassword = "";
 
     public static MmexApplication getApp() {
         return appInstance;
@@ -85,6 +88,8 @@ public class MmexApplication
         return mAmplitude;
     }
 
+    public String getPassword () {return this.mPassword;}
+    public void setPassword(String password) { this.mPassword = password ;}
     public static float getTextSize() {
         return MmexApplication.mTextSize;
     }
@@ -129,11 +134,10 @@ public class MmexApplication
 
         // Loggers
         if (BuildConfig.DEBUG) {
-            Timber.plant(new DebugTree());
+            plant(new DebugTree());
         } else {
-            //Timber.plant(new CrashReportingTree());
-            Timber.plant(new ScreenTree());
-            Timber.plant(new SysLogTree());
+            plant(new ScreenTree());
+            plant(new SysLogTree());
         }
 
         initializeDependencyInjection();
@@ -144,43 +148,11 @@ public class MmexApplication
         mAmplitude = AmplitudeKt.Amplitude("1e1fbc10354400d9c3392a89558d693d"
                 , getApplicationContext()
                 , configuration -> {
-                    configuration.setDefaultTracking(DefaultTrackingOptions.ALL);
+                    configuration.setTrackingOptions(new TrackingOptions());
                     configuration.setOptOut(!new AppSettings(this).getGeneralSettings().getSendUsage());
                     return Unit.INSTANCE;
                 }
         );
-
-        mAmplitude.setDeviceId(getOrCreateUUID(this));
-    }
-
-    public static String getOrCreateUUID(Context context) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-
-        String appUUID = preferences.getString("uuid", null);
-
-        if (appUUID == null || appUUID.isEmpty()) {
-            // UUID does not exist in preferences, generate and store it
-            appUUID = generateAndStoreUUID(context);
-        }
-
-        return appUUID;
-    }
-
-    private static String generateAndStoreUUID(Context context) {
-        // Generate a random UUID
-        UUID uuid = UUID.randomUUID();
-
-        // Convert UUID to string and remove hyphens
-        String appUUID = uuid.toString().replace("-", "");
-
-        // Store the generated UUID using SharedPreferences
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        preferences.edit().putString("uuid", appUUID).apply();
-
-        // Log the generated UUID for verification (you can remove this in production)
-        Timber.d("Generated UUID: " + appUUID);
-
-        return appUUID;
     }
 
     /**
@@ -230,7 +202,7 @@ public class MmexApplication
             openHelperAtomicReference = new AtomicReference<>(db);
         } else {
             // close existing db
-            openHelperAtomicReference.get().close();
+           // openHelperAtomicReference.get().close();
             openHelperAtomicReference.set(db);
         }
     }

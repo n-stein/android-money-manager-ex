@@ -18,15 +18,16 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+    namespace "info.javaperformance.money"
+    compileSdk rootProject.ext.compileSdk
 
     defaultConfig {
-        minSdkVersion 22
-        targetSdkVersion 31
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdk
     }
     buildTypes {
         debug {
-            minifyEnabled true
+            minifyEnabled false
 //            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
