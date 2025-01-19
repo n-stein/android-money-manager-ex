@@ -19,7 +19,6 @@ package com.money.manager.ex.settings;
 import android.Manifest;
 import android.app.TimePickerDialog;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.format.DateFormat;
 import android.widget.Toast;
@@ -28,6 +27,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
+import androidx.preference.SwitchPreference;
 
 import com.money.manager.ex.Constants;
 import com.money.manager.ex.R;
@@ -56,6 +57,16 @@ public class BehaviourSettingsFragment
 
         initializeNotificationTime();
         initializeSmsAutomation();
+
+        // todo force true and disable. remove after cleaning old catsubcat
+        Preference nestedCat = findPreference(getString(R.string.pref_use_nested_category));
+        if (nestedCat != null) {
+            // TODO: until review of code for nestedcategory is not complited
+            (new AppSettings(getContext()).getBehaviourSettings()).setUseNestedCategory(true);
+            nestedCat.setEnabled(false);
+            nestedCat.setDefaultValue(true);
+        }
+
     }
 
     @Override
@@ -78,12 +89,9 @@ public class BehaviourSettingsFragment
         Preference preference = findPreference(getString(PreferenceConstants.PREF_REPEATING_TRANSACTION_CHECK));
         if (preference == null) return;
 
-        Preference.OnPreferenceClickListener listener = new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                showTimePicker();
-                return true;
-            }
+        Preference.OnPreferenceClickListener listener = preference1 -> {
+            showTimePicker();
+            return true;
         };
         preference.setOnPreferenceClickListener(listener);
     }
@@ -123,42 +131,34 @@ public class BehaviourSettingsFragment
 
         if (preference == null) return;
 
-        Preference.OnPreferenceClickListener listener = new Preference.OnPreferenceClickListener()
-        {
-            @Override
-            public boolean onPreferenceClick(Preference preference)
+        Preference.OnPreferenceClickListener listener = preference1 -> {
+
+            //Check the permission exists, if not request the permission from the user
+            long result = ContextCompat.checkSelfPermission(getActivity(),
+                    Manifest.permission.RECEIVE_SMS);
+
+            if (settings.getBankSmsTrans())
             {
-
-                if (Build.VERSION.SDK_INT >= 23)
+                if (result == PackageManager.PERMISSION_GRANTED)
                 {
-                    //Check the permission exists, if not request the permission from the user
-                    int result = ContextCompat.checkSelfPermission(getActivity(),
-                            Manifest.permission.RECEIVE_SMS);
-
-                    if (settings.getBankSmsTrans())
-                    {
-                        if (result == PackageManager.PERMISSION_GRANTED)
-                        {
-                            Toast.makeText(getActivity(), R.string.granted_receive_sms_access, Toast.LENGTH_LONG).show();
-                        }
-                        else
-                        {
-                            // request for the permission
-                            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECEIVE_SMS}, 1);
-                        }
-                    }
-                    else
-                    {
-                        // remove the permissions
-                        Toast.makeText(getActivity(), R.string.revoke_receive_sms_access, Toast.LENGTH_LONG).show();
-                        settings.setBankSmsTrans(false);
-                        settings.setSmsTransStatusNotification(false);
-
-                    }
+                    Toast.makeText(getActivity(), R.string.granted_receive_sms_access, Toast.LENGTH_LONG).show();
                 }
-
-                return true;
+                else
+                {
+                    // request for the permission
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECEIVE_SMS}, 1);
+                }
             }
+            else
+            {
+                // remove the permissions
+                Toast.makeText(getActivity(), R.string.revoke_receive_sms_access, Toast.LENGTH_LONG).show();
+                settings.setBankSmsTrans(false);
+                settings.setSmsTransStatusNotification(false);
+
+            }
+
+            return true;
         };
         preference.setOnPreferenceClickListener(listener);
     }

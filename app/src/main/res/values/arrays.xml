@@ -103,7 +103,7 @@
     <!-- context menu options for currency list -->
     <string-array name="context_menu_currencies">
         <item>@string/edit</item>
-        <item>@string/show_chart</item>
+    <!--    <item>@string/show_chart</item> -->
         <item>@string/update_menu_currency_exchange_rates</item>
         <item>@string/delete</item>
     </string-array>
@@ -201,6 +201,14 @@
         <item>@string/montly_last_days</item>
         <item>@string/montly_last_bussines_day</item>
     </string-array>
+
+    <!-- EP recurring mode -->
+    <string-array name="recurring_mode">
+        <item>@string/manual</item>
+        <item>@string/prompt</item>
+        <item>@string/auto</item>
+    </string-array>
+
 
     <!-- Define font entries and values -->
     <string-array name="application_font_entries">

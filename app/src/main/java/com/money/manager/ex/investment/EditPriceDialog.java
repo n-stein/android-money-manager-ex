@@ -36,27 +36,24 @@ import com.money.manager.ex.common.AmountInputDialog;
 import com.money.manager.ex.common.events.AmountEnteredEvent;
 import com.money.manager.ex.core.FormatUtilities;
 import com.money.manager.ex.core.UIHelper;
-import com.money.manager.ex.core.bundlers.PriceDownloadedEventBundler;
 import com.money.manager.ex.datalayer.AccountRepository;
 import com.money.manager.ex.datalayer.StockHistoryRepository;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.investment.events.PriceDownloadedEvent;
-import com.money.manager.ex.sync.SyncManager;
 import com.money.manager.ex.utils.AlertDialogWrapper;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.utils.MmxDateTimeUtils;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
+import org.parceler.Parcels;
 
 import java.util.Date;
 
 import javax.inject.Inject;
 
 import dagger.Lazy;
-import icepick.Icepick;
-import icepick.State;
 import info.javaperformance.money.Money;
 import info.javaperformance.money.MoneyFactory;
 
@@ -78,10 +75,10 @@ public class EditPriceDialog
 
     @Inject Lazy<MmxDateTimeUtils> dateTimeUtilsLazy;
 
-    @State int mAccountId;
-    @State String mUserDateFormat;
-    @State(PriceDownloadedEventBundler.class) PriceDownloadedEvent mPrice;
-    @State int mCurrencyId = Constants.NOT_SET;
+    long mAccountId;
+    String mUserDateFormat;
+    PriceDownloadedEvent mPrice;
+    long mCurrencyId = Constants.NOT_SET;
 
     private EditPriceViewHolder viewHolder;
     private final Lazy<FormatUtilities> formatUtilitiesLazy;
@@ -102,7 +99,10 @@ public class EditPriceDialog
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            Icepick.restoreInstanceState(this, savedInstanceState);
+            mAccountId = savedInstanceState.getInt(ARG_ACCOUNT);
+            mUserDateFormat = savedInstanceState.getString(ARG_DATE);
+            mPrice = Parcels.unwrap(savedInstanceState.getParcelable(ARG_PRICE));
+            mCurrencyId = savedInstanceState.getInt(ARG_SYMBOL);
         } else {
             createNewEntity();
         }
@@ -136,8 +136,6 @@ public class EditPriceDialog
                     Toast.makeText(getContext(), getContext().getString(R.string.error_update_currency_exchange_rate),
                             Toast.LENGTH_SHORT).show();
                 }
-
-                new SyncManager(getContext()).dataChanged();
             }
         });
         builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -171,7 +169,10 @@ public class EditPriceDialog
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
 
-        Icepick.saveInstanceState(this, savedInstanceState);
+        savedInstanceState.putLong(ARG_ACCOUNT, mAccountId);
+        savedInstanceState.putString(ARG_DATE, mUserDateFormat);
+        savedInstanceState.putParcelable(ARG_PRICE, Parcels.wrap(mPrice));
+        savedInstanceState.putLong(ARG_SYMBOL, mCurrencyId);
     }
 
     @Subscribe
@@ -223,7 +224,7 @@ public class EditPriceDialog
 
                 // Customize the DatePickerDialog if needed
                 datePicker.show();
-            };
+            }
         };
         viewHolder.dateTextView.setOnClickListener(dateClickListener);
 

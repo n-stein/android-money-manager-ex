@@ -36,16 +36,12 @@ import com.money.manager.ex.core.MenuHelper;
 import com.money.manager.ex.core.RequestCodes;
 import com.money.manager.ex.datalayer.StockHistoryRepository;
 import com.money.manager.ex.datalayer.StockRepository;
-import com.money.manager.ex.sync.SyncManager;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.utils.MmxDateTimeUtils;
 
 import javax.inject.Inject;
 
-import butterknife.ButterKnife;
-import butterknife.OnClick;
 import dagger.Lazy;
-import icepick.Icepick;
 import info.javaperformance.money.MoneyFactory;
 import timber.log.Timber;
 
@@ -56,7 +52,6 @@ public class PriceEditActivity
 
     @Inject Lazy<MmxDateTimeUtils> dateTimeUtilsLazy;
 
-    //@State
     protected PriceEditModel model;
     private EditPriceViewHolder viewHolder;
 
@@ -67,18 +62,20 @@ public class PriceEditActivity
 
         MmexApplication.getApp().iocComponent.inject(this);
 
-        ButterKnife.bind(this);
-
         initializeToolbar();
 
         if (savedInstanceState != null) {
-            Icepick.restoreInstanceState(this, savedInstanceState);
+            // TODO
         }  else {
             initializeModel();
         }
 
         viewHolder = new EditPriceViewHolder();
         viewHolder.bind(this);
+        viewHolder.amountTextView.setOnClickListener(view -> onPriceClick());
+        viewHolder.dateTextView.setOnClickListener(view -> onDateClick());
+        viewHolder.previousDayButton.setOnClickListener(view -> onPreviousDayClick());
+        viewHolder.nextDayButton.setOnClickListener(view -> onNextDayClick());
 
         model.display(this, viewHolder);
     }
@@ -128,20 +125,17 @@ public class PriceEditActivity
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-
-        Icepick.saveInstanceState(this, savedInstanceState);
+        // TODO
     }
 
-    @OnClick(R.id.amountTextView)
-    protected void onPriceClick() {
+    private void onPriceClick() {
         Calculator.forActivity(this)
             .amount(model.price)
             .roundToCurrency(false)
             .show(RequestCodes.AMOUNT);
     }
 
-    @OnClick(R.id.dateTextView)
-    protected void onDateClick() {
+    private void onDateClick() {
         MmxDate priceDate = model.date;
 
         DatePickerDialog.OnDateSetListener listener = (view, year, month, dayOfMonth) -> {
@@ -161,15 +155,13 @@ public class PriceEditActivity
         datePicker.show();
     }
 
-    @OnClick(R.id.previousDayButton)
-    protected void onPreviousDayClick() {
+    private void onPreviousDayClick() {
         model.date = model.date.minusDays(1);
 
         model.display(this, viewHolder);
     }
 
-    @OnClick(R.id.nextDayButton)
-    protected void onNextDayClick() {
+    private void onNextDayClick() {
         model.date = model.date.plusDays(1);
 
         model.display(this, viewHolder);
@@ -195,7 +187,7 @@ public class PriceEditActivity
         Intent intent = getIntent();
         if (intent == null) return;
 
-        model.accountId = intent.getIntExtra(EditPriceDialog.ARG_ACCOUNT, Constants.NOT_SET);
+        model.accountId = intent.getLongExtra(EditPriceDialog.ARG_ACCOUNT, Constants.NOT_SET);
         model.symbol = intent.getStringExtra(EditPriceDialog.ARG_SYMBOL);
 
         String priceString = intent.getStringExtra(EditPriceDialog.ARG_PRICE);
@@ -205,7 +197,7 @@ public class PriceEditActivity
         model.date = new MmxDate(dateString);
 
         // currency!
-        model.currencyId = intent.getIntExtra(ARG_CURRENCY_ID, Constants.NOT_SET);
+        model.currencyId = intent.getLongExtra(ARG_CURRENCY_ID, Constants.NOT_SET);
     }
 
     private void save() {
@@ -219,7 +211,5 @@ public class PriceEditActivity
             Toast.makeText(this, getString(R.string.error_update_currency_exchange_rate),
                     Toast.LENGTH_SHORT).show();
         }
-
-        new SyncManager(this).dataChanged();
     }
 }
