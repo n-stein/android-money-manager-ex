@@ -132,8 +132,7 @@ public class AccountTransaction
         if (amount == null) {
             amount = 0D;
         }
-        Money result = MoneyFactory.fromDouble(amount);
-        return result;
+        return MoneyFactory.fromDouble(amount);
     }
 
     public void setAmount(Money value) {
@@ -145,8 +144,7 @@ public class AccountTransaction
         if (amount == null) {
             amount = 0D;
         }
-        Money result = MoneyFactory.fromDouble(amount);
-        return result;
+        return MoneyFactory.fromDouble(amount);
     }
 
     public void setToAmount(Money value) {
