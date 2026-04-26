@@ -859,6 +859,7 @@
 
 
     <string name="shares">Shares</string>
+    <string name="menu_hide_zero_shares">Hide zero-shares</string>
     <string name="loan">Loan</string>
     <string name="loan_account">Loan Accounts</string>
     <string name="shares_accounts">Shares Accounts</string>
@@ -891,6 +892,7 @@
     <string name="attachment_folder">Attachment Folder</string>
     <string name="attachment_folder_summary">Select the folder where attachments will be saved</string>
     <string name="pref_attachment_folder">Attachment Folder</string>
+    <string name="pref_portfolio_hide_zero_shares" translatable="false">pref_portfolio_hide_zero_shares</string>
     <string name="version_copied_to_clipboard">Version number copied to cliboard</string>
     <string name="issue_open">"Open issue on GitHub "</string>
 

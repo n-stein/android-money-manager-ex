@@ -18,6 +18,7 @@ package com.money.manager.ex.investment;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -54,6 +55,7 @@ import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.preference.PreferenceManager;
 
 import java.util.List;
 import java.util.Objects;
@@ -67,6 +69,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     private static final String ARG_ACCOUNT_ID = "PortfolioFragment:accountId";
     private static final int MENU_DOWNLOAD_ALL_PRICES = 1001;
     private static final int MENU_VIEW_CASH_LEDGER = 1002;
+    private static final int MENU_HIDE_ZERO_SHARES = 1003;
 
     private StockViewModel viewModel;
     private PortfolioListAdapter mAdapter;
@@ -75,6 +78,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     private Stock selectedStock;
     private boolean isBulkDownloadInProgress;
     private boolean isMenuProviderRegistered;
+    private List<Stock> mDisplayedStocks;
 
     private ActivityResultLauncher<Intent> editPriceLauncher;
     private ActivityResultLauncher<Intent> editInvestmentLauncher;
@@ -225,7 +229,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         viewModel.getStocks().observe(getViewLifecycleOwner(), stocks -> {
             mStocks = stocks;
-            mAdapter.submitList(stocks);
+            updateDisplayedStocks();
             checkEmpty();
             updateInvestmentHeader();
         });
@@ -383,6 +387,15 @@ public class PortfolioFragment extends BaseRecyclerFragment {
                 if (menu.findItem(MENU_VIEW_CASH_LEDGER) == null) {
                     menu.add(Menu.NONE, MENU_VIEW_CASH_LEDGER, Menu.NONE, R.string.cash_ledger);
                 }
+                if (menu.findItem(MENU_HIDE_ZERO_SHARES) == null) {
+                    MenuItem item = menu.add(Menu.NONE, MENU_HIDE_ZERO_SHARES, Menu.NONE, R.string.menu_hide_zero_shares);
+                    item.setCheckable(true);
+                }
+
+                MenuItem hideZeroSharesItem = menu.findItem(MENU_HIDE_ZERO_SHARES);
+                if (hideZeroSharesItem != null) {
+                    hideZeroSharesItem.setChecked(isHideZeroSharesEnabled());
+                }
             }
 
             @Override
@@ -397,6 +410,15 @@ public class PortfolioFragment extends BaseRecyclerFragment {
                     }
                     return true;
                 }
+                if (menuItem.getItemId() == MENU_HIDE_ZERO_SHARES) {
+                    boolean newValue = !menuItem.isChecked();
+                    menuItem.setChecked(newValue);
+                    setHideZeroSharesEnabled(newValue);
+                    updateDisplayedStocks();
+                    checkEmpty();
+                    updateInvestmentHeader();
+                    return true;
+                }
                 return false;
             }
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
@@ -405,7 +427,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     }
 
     private void downloadAllPrices() {
-        List<Stock> stocks = viewModel.getStocks().getValue();
+        List<Stock> stocks = mDisplayedStocks != null ? mDisplayedStocks : viewModel.getStocks().getValue();
         if (stocks == null || stocks.isEmpty()) {
             Toast.makeText(getContext(), R.string.no_stock_data, Toast.LENGTH_SHORT).show();
             return;
@@ -414,5 +436,38 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         isBulkDownloadInProgress = true;
         Toast.makeText(getContext(), R.string.starting_price_update, Toast.LENGTH_SHORT).show();
         viewModel.downloadAllStockPrices(stocks);
+    }
+
+    private void updateDisplayedStocks() {
+        if (mStocks == null) {
+            mDisplayedStocks = null;
+            mAdapter.submitList(null);
+            return;
+        }
+
+        if (isHideZeroSharesEnabled()) {
+            List<Stock> filteredStocks = new java.util.ArrayList<>();
+            for (Stock stock : mStocks) {
+                if (stock == null) continue;
+                if (Double.compare(stock.getNumberOfShares(), 0.0) != 0) {
+                    filteredStocks.add(stock);
+                }
+            }
+            mDisplayedStocks = filteredStocks;
+        } else {
+            mDisplayedStocks = mStocks;
+        }
+
+        mAdapter.submitList(new java.util.ArrayList<>(mDisplayedStocks), mAdapter::notifyDataSetChanged);
+    }
+
+    private boolean isHideZeroSharesEnabled() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        return preferences.getBoolean(getString(R.string.pref_portfolio_hide_zero_shares), false);
+    }
+
+    private void setHideZeroSharesEnabled(boolean enabled) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        preferences.edit().putBoolean(getString(R.string.pref_portfolio_hide_zero_shares), enabled).apply();
     }
 }
