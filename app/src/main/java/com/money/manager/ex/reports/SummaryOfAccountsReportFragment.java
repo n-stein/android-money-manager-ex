@@ -98,6 +98,11 @@ public class SummaryOfAccountsReportFragment extends Fragment {
     private static final String COL_FROM_AMOUNT_BASE = "FROMAMOUNTBASE";
     private static final String COL_TO_AMOUNT_BASE = "TOAMOUNTBASE";
 
+    private static final String COL_STOCK_PURCHASE_DATE = "PURCHASEDATE";
+    private static final String COL_STOCK_INITIAL_VALUE = "INITIALVALUE";
+    private static final String COL_STOCK_PRICE_DATE = "PRICEDATE";
+    private static final String COL_STOCK_VALUE_DELTA = "VALUEDELTA";
+
     private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("MMM", Locale.getDefault());
 
     private TableLayout tableLayout;
@@ -202,6 +207,7 @@ public class SummaryOfAccountsReportFragment extends Fragment {
             filterMode, settings, PREF_FILTER_CUSTOM, "a.ACCOUNTID");
         loadAccounts(state, accountWhere);
         loadTransactions(state);
+        loadStockMarketValues(state);
 
         normalizeDateBounds(state);
 
@@ -301,6 +307,96 @@ public class SummaryOfAccountsReportFragment extends Fragment {
             }
         } finally {
             transactionCursor.close();
+        }
+    }
+
+    private void loadStockMarketValues(BuildState state) {
+        loadStockInitialValues(state);
+        loadStockPriceDeltas(state);
+    }
+
+    // Adds one event per stock at PURCHASEDATE using the last known price at or before that date,
+    // falling back to PURCHASEPRICE if no history exists yet.
+    private void loadStockInitialValues(BuildState state) {
+        Cursor cursor = executeSqlQuery("SELECT "
+                + "s.HELDAT AS ACCOUNTID, "
+                + "date(s.PURCHASEDATE) AS PURCHASEDATE, "
+                + "s.NUMSHARES * ifnull("
+                + "(SELECT h.VALUE FROM STOCKHISTORY_V1 h "
+                + "WHERE h.SYMBOL = s.SYMBOL AND date(h.DATE) <= date(s.PURCHASEDATE) "
+                + "ORDER BY h.DATE DESC LIMIT 1), "
+                + "s.PURCHASEPRICE) * ifnull(c.BASECONVRATE, 1) AS INITIALVALUE "
+                + "FROM stock_v1 s "
+                + "JOIN ACCOUNTLIST_V1 a ON s.HELDAT = a.ACCOUNTID "
+                + "LEFT JOIN CURRENCYFORMATS_V1 c ON a.CURRENCYID = c.CURRENCYID");
+
+        if (cursor == null) {
+            return;
+        }
+
+        try {
+            while (cursor.moveToNext()) {
+                long accountId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ACCOUNT_ID));
+                if (!AccountTypes.INVESTMENT.equalsName(state.accountTypeById.get(accountId))) {
+                    continue;
+                }
+
+                LocalDate purchaseDate = parseDate(cursor.getString(cursor.getColumnIndexOrThrow(COL_STOCK_PURCHASE_DATE)));
+                if (purchaseDate == null) {
+                    purchaseDate = LocalDate.now();
+                }
+
+                double initialValue = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_STOCK_INITIAL_VALUE));
+                state.events.add(new BalanceEvent(purchaseDate, accountId, initialValue));
+                state.minDate = minDate(state.minDate, purchaseDate);
+            }
+        } finally {
+            cursor.close();
+        }
+    }
+
+    // Adds one delta event per STOCKHISTORY entry after PURCHASEDATE: the change in market value
+    // (price difference × shares × base rate) so the running total tracks historical prices.
+    private void loadStockPriceDeltas(BuildState state) {
+        Cursor cursor = executeSqlQuery("SELECT "
+                + "s.HELDAT AS ACCOUNTID, "
+                + "date(h.DATE) AS PRICEDATE, "
+                + "s.NUMSHARES * (h.VALUE - ifnull("
+                + "(SELECT h2.VALUE FROM STOCKHISTORY_V1 h2 "
+                + "WHERE h2.SYMBOL = s.SYMBOL AND date(h2.DATE) < date(h.DATE) "
+                + "ORDER BY h2.DATE DESC LIMIT 1), "
+                + "ifnull("
+                + "(SELECT h3.VALUE FROM STOCKHISTORY_V1 h3 "
+                + "WHERE h3.SYMBOL = s.SYMBOL AND date(h3.DATE) <= date(s.PURCHASEDATE) "
+                + "ORDER BY h3.DATE DESC LIMIT 1), "
+                + "s.PURCHASEPRICE)"
+                + ")) * ifnull(c.BASECONVRATE, 1) AS VALUEDELTA "
+                + "FROM stock_v1 s "
+                + "JOIN ACCOUNTLIST_V1 a ON s.HELDAT = a.ACCOUNTID "
+                + "LEFT JOIN CURRENCYFORMATS_V1 c ON a.CURRENCYID = c.CURRENCYID "
+                + "JOIN STOCKHISTORY_V1 h ON h.SYMBOL = s.SYMBOL AND date(h.DATE) > date(s.PURCHASEDATE)");
+
+        if (cursor == null) {
+            return;
+        }
+
+        try {
+            while (cursor.moveToNext()) {
+                long accountId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ACCOUNT_ID));
+                if (!AccountTypes.INVESTMENT.equalsName(state.accountTypeById.get(accountId))) {
+                    continue;
+                }
+
+                LocalDate priceDate = parseDate(cursor.getString(cursor.getColumnIndexOrThrow(COL_STOCK_PRICE_DATE)));
+                if (priceDate == null) {
+                    continue;
+                }
+
+                double valueDelta = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_STOCK_VALUE_DELTA));
+                state.events.add(new BalanceEvent(priceDate, accountId, valueDelta));
+            }
+        } finally {
+            cursor.close();
         }
     }
 
