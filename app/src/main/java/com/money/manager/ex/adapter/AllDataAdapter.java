@@ -88,7 +88,8 @@ public class AllDataAdapter
         ATTACHMENTCOUNT,
         CURRENCYID, PAYEE, ACCOUNTNAME, CATEGORY, NOTES,
         TOCURRENCYID, TOACCOUNTID, TOAMOUNT, TOACCOUNTNAME, TAGS, COLOR,
-        SPLITTED, CATEGID;
+        SPLITTED, CATEGID, ISSTOCKLINKED,
+        SHARENUMBER, SHAREPRICE, SHARECOMMISSION, SHARELOT, STOCKNAME;
 
     private final LayoutInflater mInflater;
     // hash map for group
@@ -139,6 +140,8 @@ public class AllDataAdapter
 
         String transactionType = cursor.getString(cursor.getColumnIndexOrThrow(TRANSACTIONTYPE));
         boolean isTransfer = TransactionTypes.valueOf(transactionType).equals(TransactionTypes.Transfer);
+        boolean isStockLinked = isStockLinkedTransaction(cursor);
+        boolean isShareTransaction = isShareTransaction(isStockLinked);
 
         // header index
         long accountId = cursor.getLong(cursor.getColumnIndexOrThrow(TOACCOUNTID));
@@ -206,7 +209,7 @@ public class AllDataAdapter
 
         // text color amount
         int amountTextColor;
-        if (isTransfer) {
+        if (isTransfer || isStockLinked) {
             amountTextColor = ContextCompat.getColor(mContext, R.color.material_blue_700); // gray is not well-visible in dark
         } else if (TransactionTypes.valueOf(transactionType).equals(TransactionTypes.Deposit)) {
             amountTextColor = ContextCompat.getColor(mContext, R.color.material_green_700);
@@ -228,13 +231,15 @@ public class AllDataAdapter
         }
 
         // Payee
-        String payee = getPayeeName(cursor, isTransfer);
+        String payee = isShareTransaction ? getShareTitle(cursor) : getPayeeName(cursor, isTransfer);
         holder.txtPayee.setText(payee);
 
         // compose category description
 
         String categorySub;
-        if (!isTransfer) {
+        if (isShareTransaction) {
+            categorySub = getShareDetails(cursor, currencyService);
+        } else if (!isTransfer) {
             categorySub = cursor.getString(cursor.getColumnIndexOrThrow(CATEGORY));
 
             categorySub = (categorySub == null ? "--not available--" : categorySub);  // in case of transaction with split created without category
@@ -394,6 +399,12 @@ public class AllDataAdapter
         COLOR = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.COLOR : QueryBillDeposits.COLOR;
         SPLITTED = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.SPLITTED : QueryBillDeposits.SPLITTED;
         CATEGID = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.CATEGID : QueryBillDeposits.CATEGID;
+        ISSTOCKLINKED = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.ISSTOCKLINKED : null;
+        SHARENUMBER = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.SHARENUMBER : null;
+        SHAREPRICE = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.SHAREPRICE : null;
+        SHARECOMMISSION = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.SHARECOMMISSION : null;
+        SHARELOT = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.SHARELOT : null;
+        STOCKNAME = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.STOCKNAME : null;
     }
 
     public void setBalances(HashMap<Long, Money> balances) {
@@ -470,6 +481,105 @@ public class AllDataAdapter
             result = false;
         }
         return result;
+    }
+
+    private boolean isStockLinkedTransaction(Cursor cursor) {
+        if (mTypeCursor != TypeCursor.ALLDATA || TextUtils.isEmpty(ISSTOCKLINKED)) {
+            return false;
+        }
+
+        int index = cursor.getColumnIndex(ISSTOCKLINKED);
+        if (index < 0) {
+            return false;
+        }
+
+        return cursor.getInt(index) == 1;
+    }
+
+    private boolean isShareTransaction(boolean isStockLinked) {
+        return mTypeCursor == TypeCursor.ALLDATA && isStockLinked;
+    }
+
+    private String getShareTitle(Cursor cursor) {
+        if (!TextUtils.isEmpty(STOCKNAME)) {
+            int stockNameIndex = cursor.getColumnIndex(STOCKNAME);
+            if (stockNameIndex >= 0) {
+                String stockName = cursor.getString(stockNameIndex);
+                if (!TextUtils.isEmpty(stockName)) {
+                    return stockName;
+                }
+            }
+        }
+        return mContext.getString(R.string.shares);
+    }
+
+    private String getShareDetails(Cursor cursor, CurrencyService currencyService) {
+        double shareNumber = getOptionalDouble(cursor, SHARENUMBER);
+        double sharePrice = getOptionalDouble(cursor, SHAREPRICE);
+        double shareCommission = getOptionalDouble(cursor, SHARECOMMISSION);
+        String shareLot = getOptionalString(cursor, SHARELOT);
+
+        StringBuilder details = new StringBuilder();
+        details.append("<b>")
+            .append(mContext.getString(R.string.number_of_shares))
+            .append("</b>: ")
+            .append(formatShareNumber(shareNumber));
+
+        if (sharePrice != 0d) {
+            details.append(" @ ")
+                .append(currencyService.getCurrencyFormatted(getCurrencyId(), MoneyFactory.fromDouble(sharePrice)));
+        }
+
+        if (shareCommission != 0d) {
+            details.append(" | ")
+                .append(mContext.getString(R.string.commission))
+                .append(": ")
+                .append(currencyService.getCurrencyFormatted(getCurrencyId(), MoneyFactory.fromDouble(shareCommission)));
+        }
+
+        if (!TextUtils.isEmpty(shareLot)) {
+            details.append(" | ").append(shareLot);
+        }
+
+        return details.toString();
+    }
+
+    private double getOptionalDouble(Cursor cursor, String columnName) {
+        if (TextUtils.isEmpty(columnName)) {
+            return 0d;
+        }
+        int index = cursor.getColumnIndex(columnName);
+        if (index < 0 || cursor.isNull(index)) {
+            return 0d;
+        }
+        return cursor.getDouble(index);
+    }
+
+    private String getOptionalString(Cursor cursor, String columnName) {
+        if (TextUtils.isEmpty(columnName)) {
+            return "";
+        }
+        int index = cursor.getColumnIndex(columnName);
+        if (index < 0 || cursor.isNull(index)) {
+            return "";
+        }
+        return cursor.getString(index);
+    }
+
+    private String formatShareNumber(double shareNumber) {
+        if (shareNumber == 0d) {
+            return "0";
+        }
+
+        if (Math.rint(shareNumber) == shareNumber) {
+            return String.format(Locale.getDefault(), "%.0f", shareNumber);
+        }
+
+        String value = String.format(Locale.getDefault(), "%.4f", shareNumber);
+        while (value.contains(".") && (value.endsWith("0") || value.endsWith("."))) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
     }
 
     private String getPayeeName(Cursor cursor, boolean isTransfer) {

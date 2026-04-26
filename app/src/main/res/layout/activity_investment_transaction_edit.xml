@@ -121,6 +121,98 @@
                         android:layout_weight="1" />
                 </LinearLayout>
 
+                <!-- Share transaction details -->
+                <LinearLayout
+                    android:id="@+id/shareTransactionSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/transactionTypeLabel"
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/transaction_type" />
+
+                    <Spinner
+                        android:id="@+id/spinnerTransactionType"
+                        style="@style/Base.Widget.AppCompat.Spinner.Underlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Status -->
+                <LinearLayout
+                    android:id="@+id/shareStatusSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/statusLabel"
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status" />
+
+                    <Spinner
+                        android:id="@+id/spinnerStatus"
+                        style="@style/Base.Widget.AppCompat.Spinner.Underlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Payee -->
+                <LinearLayout
+                    android:id="@+id/sharePayeeSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/payeeLabel"
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/payee" />
+
+                    <Spinner
+                        android:id="@+id/spinnerPayee"
+                        style="@style/Base.Widget.AppCompat.Spinner.Underlined"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- Category -->
+                <LinearLayout
+                    android:id="@+id/shareCategorySection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/categoryLabel"
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/category" />
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/textViewCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:text=""
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+
                 <!-- Stock Name -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"

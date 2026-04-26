@@ -8,7 +8,15 @@ FROM (
         select mobiledata.month, mobiledata.year, mobiledata.transactiontype, sum(mobiledata.AmountBaseConvRate) as total
         from %%mobiledata%%
         where not(mobiledata.status = 'V')
-            and not (mobiledata.TOACCOUNTID = 32702 and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal'))
+            and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal')
+            and mobiledata.ID not in (
+                select CHECKINGACCOUNTID
+                from TRANSLINK_V1
+                where lower(LINKTYPE) = 'stock'
+                union
+                select CHECKINGACCOUNTID
+                from SHAREINFO_V1
+            )
         group by month, year, transactiontype
         ) sub1
     ) SUB2
@@ -26,9 +34,16 @@ FROM (
 		select mobiledata.month, mobiledata.year, mobiledata.transactiontype, sum(mobiledata.AmountBaseConvRate) as total
 		from %%mobiledata%%
     where not(mobiledata.status = 'V')
-            and not (mobiledata.TOACCOUNTID = 32702 and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal'))
+            and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal')
+            and mobiledata.ID not in (
+                select CHECKINGACCOUNTID
+                from TRANSLINK_V1
+                where lower(LINKTYPE) = 'stock'
+                union
+                select CHECKINGACCOUNTID
+                from SHAREINFO_V1
+            )
     group by month, year, transactiontype
     ) sub1
 ) SUB2
 GROUP BY SUB2.Year
-

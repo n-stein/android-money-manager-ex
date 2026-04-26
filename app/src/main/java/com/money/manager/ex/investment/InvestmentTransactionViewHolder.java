@@ -19,6 +19,7 @@ package com.money.manager.ex.investment;
 
 import android.view.View;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.money.manager.ex.R;
 import com.money.manager.ex.view.RobotoEditText;
@@ -31,6 +32,10 @@ import com.shamanland.fonticon.FontIconView;
 public class InvestmentTransactionViewHolder {
     public InvestmentTransactionViewHolder(View view) {
         accountSpinner = view.findViewById(R.id.spinnerAccount);
+        transactionTypeSpinner = view.findViewById(R.id.spinnerTransactionType);
+        statusSpinner = view.findViewById(R.id.spinnerStatus);
+        payeeSpinner = view.findViewById(R.id.spinnerPayee);
+        categoryTextView = view.findViewById(R.id.textViewCategory);
         dateView = view.findViewById(R.id.textViewDate);
         numSharesView = view.findViewById(R.id.numSharesView);
         stockNameEdit = view.findViewById(R.id.stockNameEdit);
@@ -44,6 +49,10 @@ public class InvestmentTransactionViewHolder {
     }
 
     public Spinner accountSpinner;
+    public Spinner transactionTypeSpinner;
+    public Spinner statusSpinner;
+    public Spinner payeeSpinner;
+    public TextView categoryTextView;
     public RobotoTextView dateView;
     public RobotoTextView numSharesView;
     public RobotoEditText stockNameEdit;

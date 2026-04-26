@@ -27,7 +27,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
+import android.widget.TextView;
 
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
@@ -35,20 +37,34 @@ import com.money.manager.ex.Constants;
 import com.money.manager.ex.MmexApplication;
 import com.money.manager.ex.R;
 import com.money.manager.ex.common.Calculator;
+import com.money.manager.ex.common.CategoryListActivity;
 import com.money.manager.ex.common.MmxBaseFragmentActivity;
+import com.money.manager.ex.core.TransactionTypes;
+import com.money.manager.ex.core.TransactionStatuses;
 import com.money.manager.ex.core.MenuHelper;
+import com.money.manager.ex.core.RequestCodes;
 import com.money.manager.ex.core.UIHelper;
 import com.money.manager.ex.datalayer.AccountRepository;
+import com.money.manager.ex.datalayer.AccountTransactionRepository;
+import com.money.manager.ex.datalayer.PayeeRepository;
+import com.money.manager.ex.datalayer.Select;
 import com.money.manager.ex.datalayer.StockRepository;
+import com.money.manager.ex.datalayer.TransactionLinkRepository;
 import com.money.manager.ex.domainmodel.Account;
+import com.money.manager.ex.domainmodel.AccountTransaction;
+import com.money.manager.ex.domainmodel.Payee;
 import com.money.manager.ex.domainmodel.Stock;
+import com.money.manager.ex.domainmodel.TransactionLink;
+import com.money.manager.ex.database.ITransactionEntity;
 import com.money.manager.ex.servicelayer.AccountService;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.utils.MmxDateTimeUtils;
 import com.money.manager.ex.view.RobotoTextView;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -64,6 +80,7 @@ public class InvestmentTransactionEditActivity
 
     public static final String ARG_ACCOUNT_ID = "InvestmentTransactionEditActivity:AccountId";
     public static final String ARG_STOCK_ID = "InvestmentTransactionEditActivity:StockId";
+    public static final String ARG_TRANS_ID = "InvestmentTransactionEditActivity:TransId";
 
     public static final int REQUEST_NUM_SHARES = 1;
     public static final int REQUEST_PURCHASE_PRICE = 2;
@@ -74,7 +91,15 @@ public class InvestmentTransactionEditActivity
 
     private Account mAccount;
     private Stock mStock;
+    private AccountTransaction mLinkedTransaction;
     private InvestmentTransactionViewHolder mViewHolder;
+    private boolean mIsShareTransactionMode;
+    private long mCategoryId = Constants.NOT_SET;
+    private String mCategoryName = "";
+
+    private final ArrayList<TransactionTypes> mTransactionTypes = new ArrayList<>();
+    private final ArrayList<String> mStatusCodes = new ArrayList<>();
+    private final ArrayList<Long> mPayeeIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,6 +129,17 @@ public class InvestmentTransactionEditActivity
                     mStock.setHeldAt(mAccount.getId());
                 }
             }
+
+            long transId = intent.getLongExtra(ARG_TRANS_ID, Constants.NOT_SET);
+            if (transId != Constants.NOT_SET) {
+                mLinkedTransaction = new AccountTransactionRepository(this).load(transId);
+            }
+
+            if (mLinkedTransaction == null && mStock != null && mStock.getId() != null) {
+                mLinkedTransaction = loadLinkedTransaction(mStock.getId());
+            }
+
+            mIsShareTransactionMode = mLinkedTransaction != null;
         }
 
         initializeForm();
@@ -145,6 +181,15 @@ public class InvestmentTransactionEditActivity
                 mStock.setCurrentPrice(amount);
                 showCurrentPrice();
                 showValue();
+                break;
+
+            case RequestCodes.CATEGORY:
+                long categoryId = data.getLongExtra(CategoryListActivity.INTENT_RESULT_CATEGID, Constants.NOT_SET);
+                if (categoryId != Constants.NOT_SET) {
+                    mCategoryId = categoryId;
+                    mCategoryName = data.getStringExtra(CategoryListActivity.INTENT_RESULT_CATEGNAME);
+                    displayCategoryName();
+                }
                 break;
         }
 
@@ -236,7 +281,15 @@ public class InvestmentTransactionEditActivity
             .trim().replace(" ", "").toUpperCase();
         mStock.setSymbol(symbol);
 
-        mStock.setNotes(mViewHolder.notesEdit.getText().toString());
+        if (mLinkedTransaction != null) {
+            mLinkedTransaction.setNotes(mViewHolder.notesEdit.getText().toString());
+            mLinkedTransaction.setTransactionType(mTransactionTypes.get(mViewHolder.transactionTypeSpinner.getSelectedItemPosition()));
+            mLinkedTransaction.setStatus(mStatusCodes.get(mViewHolder.statusSpinner.getSelectedItemPosition()));
+            mLinkedTransaction.setPayeeId(mPayeeIds.get(mViewHolder.payeeSpinner.getSelectedItemPosition()));
+            mLinkedTransaction.setCategoryId(mCategoryId);
+        } else {
+            mStock.setNotes(mViewHolder.notesEdit.getText().toString());
+        }
     }
 
     private void displayStock(Stock stock, InvestmentTransactionViewHolder viewHolder) {
@@ -264,7 +317,17 @@ public class InvestmentTransactionEditActivity
 
         showNumberOfShares();
         showPurchasePrice();
-        viewHolder.notesEdit.setText(stock.getNotes());
+        if (mLinkedTransaction != null) {
+            viewHolder.notesEdit.setText(mLinkedTransaction.getNotes());
+            selectTransactionType(mLinkedTransaction.getTransactionType());
+            selectStatus(mLinkedTransaction.getStatus());
+            selectId(viewHolder.payeeSpinner, mPayeeIds, mLinkedTransaction.getPayeeId());
+            mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+            loadCategoryName(mCategoryId);
+        } else {
+            viewHolder.notesEdit.setText(stock.getNotes());
+        }
+        displayCategoryName();
         showCommission();
         showCurrentPrice();
         showValue();
@@ -276,6 +339,9 @@ public class InvestmentTransactionEditActivity
 
         initDateControl(mViewHolder);
         initAccountSelectors(mViewHolder);
+
+        initTransactionDetailsControls(mViewHolder);
+        updateShareTransactionSectionVisibility();
 
         displayStock(mStock, mViewHolder);
 
@@ -429,7 +495,178 @@ public class InvestmentTransactionEditActivity
             repository.add(mStock);
         }
 
+        if (mLinkedTransaction != null && mLinkedTransaction.hasId()) {
+            new AccountTransactionRepository(getApplicationContext()).update(mLinkedTransaction);
+        }
+
         return true;
+    }
+
+    private AccountTransaction loadLinkedTransaction(long stockId) {
+        TransactionLinkRepository linkRepository = new TransactionLinkRepository(this);
+        TransactionLink link = linkRepository.first(
+            linkRepository.getAllColumns(),
+            "LOWER(" + TransactionLink.LINKTYPE + ")=? AND " + TransactionLink.LINKRECORDID + "=?",
+            new String[]{"stock", Long.toString(stockId)},
+            TransactionLink.TRANSLINKID + " DESC"
+        );
+
+        if (link == null || link.getCheckingAccountId() == null) {
+            return null;
+        }
+
+        return new AccountTransactionRepository(this).load(link.getCheckingAccountId());
+    }
+
+    private void initTransactionDetailsControls(InvestmentTransactionViewHolder viewHolder) {
+        if (!mIsShareTransactionMode) {
+            return;
+        }
+
+        initTransactionTypeSelector(viewHolder.transactionTypeSpinner);
+        initStatusSelector(viewHolder.statusSpinner);
+        initPayeeSelector(viewHolder.payeeSpinner);
+        initCategorySelector(viewHolder.categoryTextView);
+
+        boolean hasLinkedTransaction = mLinkedTransaction != null;
+        viewHolder.transactionTypeSpinner.setEnabled(hasLinkedTransaction);
+        viewHolder.statusSpinner.setEnabled(hasLinkedTransaction);
+        viewHolder.payeeSpinner.setEnabled(hasLinkedTransaction);
+        viewHolder.categoryTextView.setEnabled(hasLinkedTransaction);
+    }
+
+    private void updateShareTransactionSectionVisibility() {
+        int visibility = mIsShareTransactionMode ? View.VISIBLE : View.GONE;
+        View shareSection = findViewById(R.id.shareTransactionSection);
+        View statusSection = findViewById(R.id.shareStatusSection);
+        View payeeSection = findViewById(R.id.sharePayeeSection);
+        View categorySection = findViewById(R.id.shareCategorySection);
+
+        if (shareSection != null) shareSection.setVisibility(visibility);
+        if (statusSection != null) statusSection.setVisibility(visibility);
+        if (payeeSection != null) payeeSection.setVisibility(visibility);
+        if (categorySection != null) categorySection.setVisibility(visibility);
+    }
+
+    private void initTransactionTypeSelector(Spinner spinner) {
+        mTransactionTypes.clear();
+        mTransactionTypes.add(TransactionTypes.Withdrawal);
+        mTransactionTypes.add(TransactionTypes.Deposit);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+            this,
+            android.R.layout.simple_spinner_item,
+            new String[]{getString(R.string.buy), getString(R.string.sell)}
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+    }
+
+    private void initStatusSelector(Spinner spinner) {
+        mStatusCodes.clear();
+        mStatusCodes.add(TransactionStatuses.NONE.getCode());
+        mStatusCodes.add(TransactionStatuses.RECONCILED.getCode());
+        mStatusCodes.add(TransactionStatuses.VOID.getCode());
+        mStatusCodes.add(TransactionStatuses.FOLLOWUP.getCode());
+        mStatusCodes.add(TransactionStatuses.DUPLICATE.getCode());
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+            this,
+            android.R.layout.simple_spinner_item,
+            new String[]{
+                getString(R.string.status_none),
+                getString(R.string.status_reconciled),
+                getString(R.string.status_void),
+                getString(R.string.status_follow_up),
+                getString(R.string.status_duplicate)
+            }
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+    }
+
+    private void initPayeeSelector(Spinner spinner) {
+        mPayeeIds.clear();
+        ArrayList<String> payeeNames = new ArrayList<>();
+        mPayeeIds.add(Constants.NOT_SET);
+        payeeNames.add(getString(R.string.status_none));
+
+        PayeeRepository repository = new PayeeRepository(this);
+        List<Payee> payees = repository.query(new Select(repository.getAllColumns()).orderBy("UPPER(" + Payee.PAYEENAME + ")"));
+        for (Payee payee : payees) {
+            if (!payee.getActive()) {
+                continue;
+            }
+            mPayeeIds.add(payee.getId());
+            payeeNames.add(payee.getName());
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, payeeNames);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+    }
+
+    private void initCategorySelector(TextView categoryTextView) {
+        categoryTextView.setOnClickListener(v -> {
+            if (!mIsShareTransactionMode || mLinkedTransaction == null) {
+                return;
+            }
+
+            Intent intent = new Intent(this, CategoryListActivity.class);
+            intent.setAction(Intent.ACTION_PICK);
+            startActivityForResult(intent, RequestCodes.CATEGORY);
+        });
+    }
+
+    private void loadCategoryName(long categoryId) {
+        if (categoryId == Constants.NOT_SET) {
+            mCategoryName = "";
+            return;
+        }
+
+        com.money.manager.ex.datalayer.CategoryRepository repository = new com.money.manager.ex.datalayer.CategoryRepository(this);
+        com.money.manager.ex.domainmodel.Category category = repository.load(categoryId);
+        mCategoryName = category != null ? category.getName() : "";
+    }
+
+    private void displayCategoryName() {
+        if (mViewHolder == null || mViewHolder.categoryTextView == null) {
+            return;
+        }
+
+        if (TextUtils.isEmpty(mCategoryName)) {
+            mViewHolder.categoryTextView.setText(getString(R.string.status_none));
+        } else {
+            mViewHolder.categoryTextView.setText(mCategoryName);
+        }
+    }
+
+    private void selectTransactionType(TransactionTypes transactionType) {
+        if (transactionType == null) {
+            mViewHolder.transactionTypeSpinner.setSelection(0);
+            return;
+        }
+
+        for (int i = 0; i < mTransactionTypes.size(); i++) {
+            if (mTransactionTypes.get(i) == transactionType) {
+                mViewHolder.transactionTypeSpinner.setSelection(i);
+                return;
+            }
+        }
+    }
+
+    private void selectStatus(String statusCode) {
+        if (statusCode == null) {
+            mViewHolder.statusSpinner.setSelection(0);
+            return;
+        }
+
+        for (int i = 0; i < mStatusCodes.size(); i++) {
+            if (mStatusCodes.get(i).equals(statusCode)) {
+                mViewHolder.statusSpinner.setSelection(i);
+                return;
+            }
+        }
     }
 
     private void setDate(Date dateTime) {
@@ -443,6 +680,16 @@ public class InvestmentTransactionEditActivity
     private void showDate(Date date) {
         String display = new MmxDate(date).toString(Constants.LONG_DATE_PATTERN);
         mViewHolder.dateView.setText(display);
+    }
+
+    private void selectId(Spinner spinner, ArrayList<Long> ids, Long id) {
+        if (id == null) return;
+        for (int i = 0; i < ids.size(); i++) {
+            if (id.equals(ids.get(i))) {
+                spinner.setSelection(i);
+                return;
+            }
+        }
     }
 
     private boolean validate() {
