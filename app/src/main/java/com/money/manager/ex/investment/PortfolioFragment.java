@@ -27,12 +27,14 @@ import android.view.MenuItem;
 import android.view.View;
 
 import android.view.ContextMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.money.manager.ex.R;
 import com.money.manager.ex.common.BaseRecyclerFragment;
 import com.money.manager.ex.core.ContextMenuIds;
 import com.money.manager.ex.core.MenuHelper;
+import com.money.manager.ex.currency.CurrencyService;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.Stock;
@@ -40,6 +42,9 @@ import com.money.manager.ex.home.MainActivity;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.viewmodels.StockViewModel;
 import com.money.manager.ex.viewmodels.ViewModelFactory;
+
+import info.javaperformance.money.Money;
+import info.javaperformance.money.MoneyFactory;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -73,6 +78,21 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
     private ActivityResultLauncher<Intent> editPriceLauncher;
     private ActivityResultLauncher<Intent> editInvestmentLauncher;
+
+    // Header views (from merge_header_fragment_account)
+    private TextView txtTotalBalance;
+    private View tableRowCashBalance;
+    private TextView txtCashBalance;
+    private View tableRowMarketValue;
+    private TextView txtMarketValue;
+    private View tableRowInvested;
+    private TextView txtInvested;
+    private View tableRowGainLoss;
+    private TextView txtGainLoss;
+
+    // Cached values for combined header update
+    private Money mAccountBalance;
+    private List<Stock> mStocks;
 
     /**
      * Use this factory method to create a new instance of
@@ -113,11 +133,37 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        bindHeaderViews(view);
         setupMenuProvider();
         setupViewModel();
         enableFab(true);
         registerForContextMenu(getRecyclerView());
         setupActivityResultLaunchers();
+    }
+
+    private void bindHeaderViews(@NonNull View root) {
+        // Relabel the first "Account Balance" row to "Total Balance" and hide reconciled row.
+        TextView titleView = root.findViewById(R.id.textViewAccountBalanceTitle);
+        if (titleView != null) titleView.setText(R.string.total_balance);
+        View reconciledTitle = root.findViewById(R.id.textViewAccountReconciledTitle);
+        if (reconciledTitle != null) reconciledTitle.setVisibility(View.GONE);
+        View reconciledValue = root.findViewById(R.id.textViewAccountReconciled);
+        if (reconciledValue != null) reconciledValue.setVisibility(View.GONE);
+
+        txtTotalBalance = root.findViewById(R.id.textViewAccountBalance);
+        tableRowCashBalance = root.findViewById(R.id.tableRowCashBalance);
+        txtCashBalance = root.findViewById(R.id.textViewCashBalance);
+        tableRowMarketValue = root.findViewById(R.id.tableRowMarketValue);
+        txtMarketValue = root.findViewById(R.id.textViewMarketValue);
+        tableRowInvested = root.findViewById(R.id.tableRowInvested);
+        txtInvested = root.findViewById(R.id.textViewInvested);
+        tableRowGainLoss = root.findViewById(R.id.tableRowGainLoss);
+        txtGainLoss = root.findViewById(R.id.textViewGainLoss);
+
+        if (tableRowCashBalance != null) tableRowCashBalance.setVisibility(View.VISIBLE);
+        if (tableRowMarketValue != null) tableRowMarketValue.setVisibility(View.VISIBLE);
+        if (tableRowInvested != null) tableRowInvested.setVisibility(View.VISIBLE);
+        if (tableRowGainLoss != null) tableRowGainLoss.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -178,8 +224,15 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         viewModel.clearDownloadEvents();
 
         viewModel.getStocks().observe(getViewLifecycleOwner(), stocks -> {
+            mStocks = stocks;
             mAdapter.submitList(stocks);
             checkEmpty();
+            updateInvestmentHeader();
+        });
+
+        viewModel.getAccountBalance().observe(getViewLifecycleOwner(), balance -> {
+            mAccountBalance = balance;
+            updateInvestmentHeader();
         });
 
         viewModel.getLatestDownloadedPrice().observe(getViewLifecycleOwner(), priceModel -> {
@@ -208,9 +261,47 @@ public class PortfolioFragment extends BaseRecyclerFragment {
             mAccount = account;
             mAdapter.setAccount(account);
             updateSubtitle();
+            updateInvestmentHeader();
         });
 
         viewModel.loadStocks(mAccountId);
+    }
+
+    private void updateInvestmentHeader() {
+        if (mAccount == null || mAccountBalance == null || mStocks == null) return;
+        if (txtTotalBalance == null) return;
+
+        CurrencyService currencyService = new CurrencyService(requireContext().getApplicationContext());
+        long currencyId = mAccount.getCurrencyId();
+
+        Money marketValue = MoneyFactory.fromDouble(0);
+        Money invested = MoneyFactory.fromDouble(0);
+        for (Stock s : mStocks) {
+            marketValue = marketValue.add(s.getCurrentPrice().multiply(s.getNumberOfShares()));
+            invested = invested.add(s.getPurchasePrice().multiply(s.getNumberOfShares()));
+        }
+
+        Money cashBalance = mAccountBalance.subtract(marketValue);
+        Money gainLoss = marketValue.subtract(invested);
+
+        txtTotalBalance.setText(currencyService.getCurrencyFormatted(currencyId, mAccountBalance));
+        if (txtCashBalance != null)
+            txtCashBalance.setText(currencyService.getCurrencyFormatted(currencyId, cashBalance));
+        if (txtMarketValue != null)
+            txtMarketValue.setText(currencyService.getCurrencyFormatted(currencyId, marketValue));
+        if (txtInvested != null)
+            txtInvested.setText(currencyService.getCurrencyFormatted(currencyId, invested));
+        if (txtGainLoss != null)
+            txtGainLoss.setText(formatGainLoss(currencyService, currencyId, gainLoss, invested));
+    }
+
+    private String formatGainLoss(CurrencyService currencyService, long currencyId,
+                                  Money gainLoss, Money invested) {
+        String amount = currencyService.getCurrencyFormatted(currencyId, gainLoss);
+        double investedDouble = invested.toDouble();
+        if (investedDouble == 0) return amount;
+        double pct = (gainLoss.toDouble() / investedDouble) * 100.0;
+        return String.format("%s (%.2f%%)", amount, pct);
     }
 
     @Override

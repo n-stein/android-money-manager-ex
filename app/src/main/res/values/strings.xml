@@ -95,6 +95,11 @@
     <string name="account_empty_list">No accounts have been found. To create one, tap the green plus button.</string>
     <string name="account_balance">Account Balance</string>
     <string name="account_reconciled_balance">Reconciled Balance</string>
+    <string name="total_balance">Total Balance</string>
+    <string name="cash_balance">Cash Balance</string>
+    <string name="market_value">Market Value</string>
+    <string name="invested">Invested</string>
+    <string name="gain_loss">Gain / Loss</string>
     <string name="delete_account">Delete Account</string>
     <string name="account_name">Account name</string>
     <string name="account_type">Account type</string>
