@@ -19,6 +19,8 @@ package com.money.manager.ex.investment;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -34,6 +36,7 @@ import com.money.manager.ex.core.MenuHelper;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.Stock;
+import com.money.manager.ex.home.MainActivity;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.viewmodels.StockViewModel;
 import com.money.manager.ex.viewmodels.ViewModelFactory;
@@ -58,6 +61,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
     private static final String ARG_ACCOUNT_ID = "PortfolioFragment:accountId";
     private static final int MENU_DOWNLOAD_ALL_PRICES = 1001;
+    private static final int MENU_VIEW_CASH_LEDGER = 1002;
 
     private StockViewModel viewModel;
     private PortfolioListAdapter mAdapter;
@@ -203,6 +207,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         viewModel.getAccount().observe(getViewLifecycleOwner(), account -> {
             mAccount = account;
             mAdapter.setAccount(account);
+            updateSubtitle();
         });
 
         viewModel.loadStocks(mAccountId);
@@ -223,7 +228,16 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     @Override
     public void onResume() {
         super.onResume();
+        updateSubtitle();
         viewModel.loadStocks(mAccountId);
+    }
+
+    private void updateSubtitle() {
+        if (!(getActivity() instanceof AppCompatActivity)) return;
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity.getSupportActionBar() == null) return;
+        activity.getSupportActionBar().setDisplayShowTitleEnabled(true);
+        activity.getSupportActionBar().setSubtitle(getSubTitle());
     }
 
     private void openEditInvestmentActivity(Long stockId) {
@@ -275,12 +289,21 @@ public class PortfolioFragment extends BaseRecyclerFragment {
                 if (menu.findItem(MENU_DOWNLOAD_ALL_PRICES) == null) {
                     menu.add(Menu.NONE, MENU_DOWNLOAD_ALL_PRICES, Menu.NONE, R.string.download_all_prices);
                 }
+                if (menu.findItem(MENU_VIEW_CASH_LEDGER) == null) {
+                    menu.add(Menu.NONE, MENU_VIEW_CASH_LEDGER, Menu.NONE, R.string.cash_ledger);
+                }
             }
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 if (menuItem.getItemId() == MENU_DOWNLOAD_ALL_PRICES) {
                     downloadAllPrices();
+                    return true;
+                }
+                if (menuItem.getItemId() == MENU_VIEW_CASH_LEDGER) {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).showAccountFragment(mAccountId);
+                    }
                     return true;
                 }
                 return false;

@@ -65,6 +65,7 @@ import com.money.manager.ex.servicelayer.AccountService;
 import com.money.manager.ex.settings.AppSettings;
 import com.money.manager.ex.settings.LookAndFeelSettings;
 import com.money.manager.ex.settings.PreferenceConstants;
+import com.money.manager.ex.investment.PortfolioFragment;
 import com.money.manager.ex.transactions.CheckingTransactionEditActivity;
 import com.money.manager.ex.transactions.EditTransactionActivityConstants;
 import com.money.manager.ex.utils.MmxDate;
@@ -98,6 +99,7 @@ public class AccountTransactionListFragment
 
     private static final int ID_LOADER_SUMMARY = 2;
     private static final String TAG_FILTER_DIALOG = "FilterDialogTag";
+    private static final int MENU_VIEW_PORTFOLIO = 2001;
 
     /**
      * @param accountId Id of the Account to be displayed
@@ -282,6 +284,10 @@ public class AccountTransactionListFragment
 
         // call create option menu of fragment
         mAllDataListFragment.old_onCreateOptionsMenu(menu, inflater);
+
+        if (menu.findItem(MENU_VIEW_PORTFOLIO) == null) {
+            menu.add(Menu.NONE, MENU_VIEW_PORTFOLIO, Menu.NONE, R.string.portfolio);
+        }
     }
 
     public void old_onPrepareOptionsMenu(Menu menu) {
@@ -312,6 +318,13 @@ public class AccountTransactionListFragment
             }
         }
 
+        MenuItem itemPortfolio = menu.findItem(MENU_VIEW_PORTFOLIO);
+        if (itemPortfolio != null) {
+            boolean isInvestment = mAccount != null &&
+                    mAccount.getType() == AccountTypes.INVESTMENT;
+            itemPortfolio.setVisible(isInvestment);
+        }
+
         selectCurrentPeriod(menu);
         selectCurrentStatus(menu);
     }
@@ -336,6 +349,13 @@ public class AccountTransactionListFragment
             case R.id.menu_export_to_csv:
                 if (mAllDataListFragment != null && mAccount != null)
                     mAllDataListFragment.exportDataToCSVFile(mAccount.getName());
+                result = true;
+                break;
+
+            case MENU_VIEW_PORTFOLIO:
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).showPortfolioFragment(mAccountId);
+                }
                 result = true;
                 break;
 
