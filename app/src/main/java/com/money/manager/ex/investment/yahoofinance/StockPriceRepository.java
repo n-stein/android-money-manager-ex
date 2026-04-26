@@ -93,4 +93,67 @@ public class StockPriceRepository {
 
         return liveData;
     }
+
+    public LiveData<Integer> downloadPriceHistory(String symbol, Date fromDate, Date toDate) {
+        MutableLiveData<Integer> liveData = new MutableLiveData<>();
+
+        long period1 = fromDate.getTime() / 1000;
+        long period2 = toDate.getTime() / 1000;
+
+        yahooService.getChartDataForPeriod(symbol, period1, period2, "1d").enqueue(new Callback<YahooChartResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<YahooChartResponse> call, @NonNull Response<YahooChartResponse> response) {
+                if (response.body() == null || response.body().chart == null
+                        || response.body().chart.result == null
+                        || response.body().chart.result.isEmpty()) {
+                    liveData.postValue(0);
+                    return;
+                }
+
+                YahooChartResponse.Result result = response.body().chart.result.get(0);
+
+                if (result.timestamps == null || result.indicators == null
+                        || result.indicators.quote == null || result.indicators.quote.isEmpty()
+                        || result.indicators.quote.get(0).closePrices == null) {
+                    liveData.postValue(0);
+                    return;
+                }
+
+                try {
+                    List<Long> timestamps = result.timestamps;
+                    List<Double> prices = result.indicators.quote.get(0).closePrices;
+                    int count = 0;
+                    Money latestPrice = null;
+
+                    for (int i = 0; i < timestamps.size(); i++) {
+                        if (i >= prices.size()) break;
+                        Double price = prices.get(i);
+                        if (price == null) continue;
+                        Date date = new MmxDate(timestamps.get(i) * 1000L).toDate();
+                        Money moneyPrice = MoneyFactory.fromDouble(price);
+                        stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
+                        latestPrice = moneyPrice;
+                        count++;
+                    }
+
+                    if (latestPrice != null) {
+                        stockRepository.updateCurrentPrice(symbol, latestPrice);
+                    }
+
+                    liveData.postValue(count);
+                } catch (Exception e) {
+                    Timber.e(e, "Error storing historical stock prices");
+                    liveData.postValue(0);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<YahooChartResponse> call, @NonNull Throwable t) {
+                Timber.e(t, "Error fetching historical stock prices");
+                liveData.postValue(-1);
+            }
+        });
+
+        return liveData;
+    }
 }

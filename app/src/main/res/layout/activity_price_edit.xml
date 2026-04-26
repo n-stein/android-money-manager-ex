@@ -227,6 +227,40 @@
                 </LinearLayout>
             </LinearLayout>
 
+            <!-- price history header + download button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/mmx_list_two_line_item_height"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <com.money.manager.ex.view.RobotoTextView
+                    style="?attr/headerTextViewStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:text="@string/price_history" />
+
+                <com.mikepenz.iconics.view.IconicsImageView
+                    android:id="@+id/downloadPricesButton"
+                    android:layout_width="@dimen/mmx_side_icon_size"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:background="?attr/selectableItemBackground"
+                    app:iiv_icon="gmd-cloud-download"
+                    app:iiv_color="?android:textColorPrimary"
+                    app:iiv_size="@dimen/mmx_icon_size" />
+
+            </LinearLayout>
+
+            <!-- price history table -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/priceHistoryRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:nestedScrollingEnabled="true" />
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

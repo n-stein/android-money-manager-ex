@@ -582,6 +582,11 @@
     <string name="download_price">Download price</string>
     <string name="download_all_prices">Download all prices</string>
     <string name="edit_price">Edit price</string>
+    <string name="price_history">Price History</string>
+    <string name="download_prices">Download Prices</string>
+    <string name="download_prices_explanation">Please select the start date. Prices will be downloaded up to today.</string>
+    <string name="no_price_history">No price history available</string>
+    <string name="prices_downloaded">Downloaded %1$d prices</string>
     <string name="price_updated">Price updated</string>
     <string name="all_prices_updated">All prices have been updated.</string>
     <string name="download_complete">Download complete.</string>
