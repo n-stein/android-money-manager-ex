@@ -461,10 +461,6 @@ public class InvestmentTransactionEditActivity
         mViewHolder.commissionView.setClickable(false);
         mViewHolder.commissionView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
 
-        // Notes: read-only
-        mViewHolder.notesEdit.setEnabled(false);
-        mViewHolder.notesEdit.setFocusable(false);
-
         // currentPriceView stays clickable (user can update current price)
         // stockNameEdit and symbolEdit stay editable
     }
