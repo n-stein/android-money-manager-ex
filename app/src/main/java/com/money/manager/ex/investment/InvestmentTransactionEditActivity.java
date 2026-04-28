@@ -48,11 +48,13 @@ import com.money.manager.ex.datalayer.AccountRepository;
 import com.money.manager.ex.datalayer.AccountTransactionRepository;
 import com.money.manager.ex.datalayer.PayeeRepository;
 import com.money.manager.ex.datalayer.Select;
+import com.money.manager.ex.datalayer.ShareInfoRepository;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.datalayer.TransactionLinkRepository;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.AccountTransaction;
 import com.money.manager.ex.domainmodel.Payee;
+import com.money.manager.ex.domainmodel.ShareInfo;
 import com.money.manager.ex.domainmodel.Stock;
 import com.money.manager.ex.domainmodel.TransactionLink;
 import com.money.manager.ex.database.ITransactionEntity;
@@ -81,6 +83,8 @@ public class InvestmentTransactionEditActivity
     public static final String ARG_ACCOUNT_ID = "InvestmentTransactionEditActivity:AccountId";
     public static final String ARG_STOCK_ID = "InvestmentTransactionEditActivity:StockId";
     public static final String ARG_TRANS_ID = "InvestmentTransactionEditActivity:TransId";
+    public static final String ARG_NEW_SHARE_TRANSACTION = "InvestmentTransactionEditActivity:NewShareTransaction";
+    public static final String ARG_INITIAL_TRANSACTION_TYPE = "InvestmentTransactionEditActivity:InitialTransactionType";
 
     public static final int REQUEST_NUM_SHARES = 1;
     public static final int REQUEST_PURCHASE_PRICE = 2;
@@ -94,8 +98,12 @@ public class InvestmentTransactionEditActivity
     private AccountTransaction mLinkedTransaction;
     private InvestmentTransactionViewHolder mViewHolder;
     private boolean mIsShareTransactionMode;
+    private boolean mIsStockOverviewMode;
     private long mCategoryId = Constants.NOT_SET;
     private String mCategoryName = "";
+    private String mInitialTransactionType = null;
+    private java.util.Date mOriginalStockDate = null;
+    private ShareInfo mShareInfo = null;
 
     private final ArrayList<TransactionTypes> mTransactionTypes = new ArrayList<>();
     private final ArrayList<String> mStatusCodes = new ArrayList<>();
@@ -130,16 +138,59 @@ public class InvestmentTransactionEditActivity
                 }
             }
 
+            boolean newShareTransaction = intent.getBooleanExtra(ARG_NEW_SHARE_TRANSACTION, false);
+            mInitialTransactionType = intent.getStringExtra(ARG_INITIAL_TRANSACTION_TYPE);
+
             long transId = intent.getLongExtra(ARG_TRANS_ID, Constants.NOT_SET);
             if (transId != Constants.NOT_SET) {
                 mLinkedTransaction = new AccountTransactionRepository(this).load(transId);
             }
+            // Note: we intentionally do NOT auto-load linked transaction for plain portfolio
+            // stock clicks. That path shows the stock-overview mode (read-only position view).
 
-            if (mLinkedTransaction == null && mStock != null && mStock.getId() != null) {
-                mLinkedTransaction = loadLinkedTransaction(mStock.getId());
+            // For an explicit cash-ledger transaction, load per-transaction share data from
+            // ShareInfo and override the stock's cumulative position values for display.
+            if (mLinkedTransaction != null && mLinkedTransaction.hasId()) {
+                mShareInfo = new ShareInfoRepository(this).loadByTransactionId(mLinkedTransaction.getId());
+                java.util.Date txDate = mLinkedTransaction.getDate();
+                if (txDate != null) {
+                    mStock.setPurchaseDate(txDate);
+                }
+                if (mShareInfo != null) {
+                    double shares = mShareInfo.getShareNumber() != null ? Math.abs(mShareInfo.getShareNumber()) : 0.0;
+                    mStock.setNumberOfShares(shares);
+                    double sharePrice = mShareInfo.getSharePrice() != null ? mShareInfo.getSharePrice() : 0.0;
+                    mStock.setPurchasePrice(MoneyFactory.fromDouble(sharePrice));
+                    double shareComm = mShareInfo.getShareCommission() != null ? mShareInfo.getShareCommission() : 0.0;
+                    mStock.setCommission(MoneyFactory.fromDouble(shareComm));
+                }
+            }
+            if (newShareTransaction) {
+                mLinkedTransaction = AccountTransaction.create();
+                if (mAccount != null) {
+                    mLinkedTransaction.setAccountId(mAccount.getId());
+                }
+                java.util.Date today = new MmxDate().toDate();
+                mLinkedTransaction.setDate(today);
+                if (mInitialTransactionType != null) {
+                    try {
+                        mLinkedTransaction.setTransactionType(TransactionTypes.valueOf(mInitialTransactionType));
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+                // For an existing stock, preserve its original purchase date and show today
+                if (mStock.getId() != null) {
+                    mOriginalStockDate = mStock.getPurchaseDate();
+                    mStock.setPurchaseDate(today);
+                }
+                // Start a new trade with blank quantities
+                mStock.setNumberOfShares(0.0);
+                mStock.setPurchasePrice(MoneyFactory.fromDouble(0));
+                mStock.setCommission(MoneyFactory.fromDouble(0));
             }
 
             mIsShareTransactionMode = mLinkedTransaction != null;
+            mIsStockOverviewMode = !mIsShareTransactionMode && mStock.getId() != null;
         }
 
         initializeForm();
@@ -157,17 +208,23 @@ public class InvestmentTransactionEditActivity
             case REQUEST_NUM_SHARES:
                 mStock.setNumberOfShares(amount.toDouble());
                 showNumberOfShares();
-                showValue();
+                if (mIsShareTransactionMode) {
+                    showTotalPrice();
+                } else {
+                    showValue();
+                }
                 break;
 
             case REQUEST_PURCHASE_PRICE:
                 mStock.setPurchasePrice(amount);
                 showPurchasePrice();
-
-                if (mStock.getCurrentPrice().isZero()) {
-                    mStock.setCurrentPrice(amount);
-                    showCurrentPrice();
-                    // recalculate value
+                if (mIsShareTransactionMode) {
+                    showTotalPrice();
+                } else {
+                    if (mStock.getCurrentPrice().isZero()) {
+                        mStock.setCurrentPrice(amount);
+                        showCurrentPrice();
+                    }
                     showValue();
                 }
                 break;
@@ -175,6 +232,9 @@ public class InvestmentTransactionEditActivity
             case REQUEST_COMMISSION:
                 mStock.setCommission(amount);
                 showCommission();
+                if (mIsShareTransactionMode) {
+                    showTotalPrice();
+                }
                 break;
 
             case REQUEST_CURRENT_PRICE:
@@ -329,8 +389,12 @@ public class InvestmentTransactionEditActivity
         }
         displayCategoryName();
         showCommission();
-        showCurrentPrice();
-        showValue();
+        if (mIsShareTransactionMode) {
+            showTotalPrice();
+        } else {
+            showCurrentPrice();
+            showValue();
+        }
     }
 
     private void initializeForm() {
@@ -366,6 +430,43 @@ public class InvestmentTransactionEditActivity
         mViewHolder.currentPriceView.setOnClickListener(view -> {
             onCurrentPriceClick();
         });
+
+        if (mIsStockOverviewMode) {
+            applyStockOverviewMode();
+        }
+    }
+
+    private void applyStockOverviewMode() {
+        // Date: non-interactive
+        mViewHolder.dateView.setOnClickListener(null);
+        mViewHolder.dateView.setClickable(false);
+        mViewHolder.previousDayButton.setVisibility(View.GONE);
+        mViewHolder.nextDayButton.setVisibility(View.GONE);
+
+        // Account spinner: read-only
+        mViewHolder.accountSpinner.setEnabled(false);
+
+        // Shares: read-only (remove tap-to-edit)
+        mViewHolder.numSharesView.setOnClickListener(null);
+        mViewHolder.numSharesView.setClickable(false);
+
+        // Purchase price: read-only
+        mViewHolder.purchasePriceView.setOnClickListener(null);
+        mViewHolder.purchasePriceView.setClickable(false);
+        // Hide calculator drawable
+        mViewHolder.purchasePriceView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+
+        // Commission: read-only
+        mViewHolder.commissionView.setOnClickListener(null);
+        mViewHolder.commissionView.setClickable(false);
+        mViewHolder.commissionView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+
+        // Notes: read-only
+        mViewHolder.notesEdit.setEnabled(false);
+        mViewHolder.notesEdit.setFocusable(false);
+
+        // currentPriceView stays clickable (user can update current price)
+        // stockNameEdit and symbolEdit stay editable
     }
 
     /**
@@ -407,10 +508,7 @@ public class InvestmentTransactionEditActivity
                 calendar.setTime(mStock.getPurchaseDate());
 
                 DatePickerDialog.OnDateSetListener listener = (view, year, month, dayOfMonth) -> {
-                    setDirty(true);
-
-                    MmxDate dateTime = new MmxDate(year, month, dayOfMonth);
-                    viewHolder.dateView.setText(dateTime.toString(Constants.LONG_DATE_PATTERN));
+                    setDate(new MmxDate(year, month, dayOfMonth).toDate());
                 };
 
                 DatePickerDialog datePicker = new DatePickerDialog(
@@ -476,6 +574,13 @@ public class InvestmentTransactionEditActivity
         view.setText(mStock.getPurchasePrice().toString());
     }
 
+    private void showTotalPrice() {
+        if (mViewHolder == null || mViewHolder.totalPriceView == null) return;
+        Money total = mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
+                .add(mStock.getCommission());
+        mViewHolder.totalPriceView.setText(total.toString());
+    }
+
     private void showValue() {
         RobotoTextView view = this.findViewById(R.id.valueView);
         //mViewHolder.
@@ -487,19 +592,65 @@ public class InvestmentTransactionEditActivity
 
         if (!validate()) return false;
 
-        // update
-        StockRepository repository = new StockRepository(getApplicationContext());
-        if (mStock.getId() != null) {
-            repository.save(mStock);
-        } else {
-            repository.add(mStock);
-        }
+        AccountTransactionRepository txRepo = new AccountTransactionRepository(getApplicationContext());
+        StockRepository stockRepo = new StockRepository(getApplicationContext());
 
         if (mLinkedTransaction != null && mLinkedTransaction.hasId()) {
-            new AccountTransactionRepository(getApplicationContext()).update(mLinkedTransaction);
+            // Editing an existing share transaction.
+            // Only update name/symbol on the stock — do not overwrite its cumulative position.
+            if (mStock.getId() != null) {
+                Stock current = stockRepo.load(mStock.getId());
+                if (current != null) {
+                    current.setName(mStock.getName());
+                    current.setSymbol(mStock.getSymbol());
+                    stockRepo.save(current);
+                }
+            }
+            // Sync amount then persist the accounting transaction.
+            mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
+                    .add(mStock.getCommission()));
+            txRepo.update(mLinkedTransaction);
+            // Persist per-transaction share data.
+            saveOrUpdateShareInfo(mLinkedTransaction.getId());
+        } else {
+            // New share transaction (or plain stock save with no linked transaction).
+            if (mLinkedTransaction != null && mOriginalStockDate != null) {
+                mStock.setPurchaseDate(mOriginalStockDate);
+            }
+            if (mStock.getId() != null) {
+                stockRepo.save(mStock);
+            } else {
+                stockRepo.add(mStock);
+            }
+
+            if (mLinkedTransaction != null) {
+                mLinkedTransaction.setAccountId(mStock.getHeldAt());
+                mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
+                        .add(mStock.getCommission()));
+                txRepo.insert(mLinkedTransaction);
+
+                TransactionLink link = new TransactionLink();
+                link.setCheckingAccountId(mLinkedTransaction.getId());
+                link.setLinkType("stock");
+                link.setLinkRecordId(mStock.getId());
+                new TransactionLinkRepository(getApplicationContext()).add(link);
+
+                saveOrUpdateShareInfo(mLinkedTransaction.getId());
+            }
         }
 
         return true;
+    }
+
+    private void saveOrUpdateShareInfo(long transactionId) {
+        if (mShareInfo == null) {
+            mShareInfo = new ShareInfo();
+        }
+        mShareInfo.setCheckingAccountId(transactionId);
+        mShareInfo.setShareNumber(mStock.getNumberOfShares());
+        mShareInfo.setSharePrice(mStock.getPurchasePrice().toDouble());
+        mShareInfo.setShareCommission(mStock.getCommission().toDouble());
+        new ShareInfoRepository(getApplicationContext()).save(mShareInfo);
     }
 
     private AccountTransaction loadLinkedTransaction(long stockId) {
@@ -528,24 +679,31 @@ public class InvestmentTransactionEditActivity
         initPayeeSelector(viewHolder.payeeSpinner);
         initCategorySelector(viewHolder.categoryTextView);
 
-        boolean hasLinkedTransaction = mLinkedTransaction != null;
-        viewHolder.transactionTypeSpinner.setEnabled(hasLinkedTransaction);
-        viewHolder.statusSpinner.setEnabled(hasLinkedTransaction);
-        viewHolder.payeeSpinner.setEnabled(hasLinkedTransaction);
-        viewHolder.categoryTextView.setEnabled(hasLinkedTransaction);
+        viewHolder.transactionTypeSpinner.setEnabled(true);
+        viewHolder.statusSpinner.setEnabled(true);
+        viewHolder.payeeSpinner.setEnabled(true);
+        viewHolder.categoryTextView.setEnabled(true);
     }
 
     private void updateShareTransactionSectionVisibility() {
-        int visibility = mIsShareTransactionMode ? View.VISIBLE : View.GONE;
+        int shareVis = mIsShareTransactionMode ? View.VISIBLE : View.GONE;
+        int stockVis = mIsShareTransactionMode ? View.GONE : View.VISIBLE;
+
         View shareSection = findViewById(R.id.shareTransactionSection);
         View statusSection = findViewById(R.id.shareStatusSection);
         View payeeSection = findViewById(R.id.sharePayeeSection);
         View categorySection = findViewById(R.id.shareCategorySection);
+        View totalSection = findViewById(R.id.totalPriceSection);
+        View currentPriceSection = findViewById(R.id.currentPriceSection);
+        View valueSection = findViewById(R.id.valueSection);
 
-        if (shareSection != null) shareSection.setVisibility(visibility);
-        if (statusSection != null) statusSection.setVisibility(visibility);
-        if (payeeSection != null) payeeSection.setVisibility(visibility);
-        if (categorySection != null) categorySection.setVisibility(visibility);
+        if (shareSection != null) shareSection.setVisibility(shareVis);
+        if (statusSection != null) statusSection.setVisibility(shareVis);
+        if (payeeSection != null) payeeSection.setVisibility(shareVis);
+        if (categorySection != null) categorySection.setVisibility(shareVis);
+        if (totalSection != null) totalSection.setVisibility(shareVis);
+        if (currentPriceSection != null) currentPriceSection.setVisibility(stockVis);
+        if (valueSection != null) valueSection.setVisibility(stockVis);
     }
 
     private void initTransactionTypeSelector(Spinner spinner) {
@@ -673,6 +831,9 @@ public class InvestmentTransactionEditActivity
         setDirty(true);
 
         mStock.setPurchaseDate(dateTime);
+        if (mLinkedTransaction != null) {
+            mLinkedTransaction.setDate(dateTime);
+        }
 
         showDate(dateTime);
     }

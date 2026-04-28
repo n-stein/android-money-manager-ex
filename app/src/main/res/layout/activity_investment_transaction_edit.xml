@@ -281,23 +281,6 @@
                     android:gravity="end"
                     android:textStyle="bold" />
 
-                <!-- Notes -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.money.manager.ex.view.RobotoEditText
-                        android:id="@+id/notesEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="@dimen/mmx_padding"
-                        android:gravity="top|start"
-                        android:hint="@string/notes"
-                        android:inputType="textMultiLine"
-                        android:scrollHorizontally="false"
-                        android:textCursorDrawable="@null" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <!-- Commission -->
                 <com.money.manager.ex.view.RobotoTextView
                     style="@style/Money.TextView.Header.Caption"
@@ -315,52 +298,93 @@
                     android:gravity="end"
                     android:textStyle="bold" />
 
-                <!-- Current Price -->
-                <com.money.manager.ex.view.RobotoTextView
-                    style="@style/Money.TextView.Header.Caption"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/current_price" />
-
-                <com.money.manager.ex.view.RobotoTextView
-                    android:id="@+id/currentPriceView"
-                    style="@style/Money.TextView.Widget.EditText"
+                <!-- Total Price (shares × price + commission, share transaction mode only) -->
+                <LinearLayout
+                    android:id="@+id/totalPriceSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="?attr/ic_calculator"
-                    android:drawableStart="?attr/ic_calculator"
-                    android:gravity="end"
-                    android:textStyle="bold" />
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
-                <!-- Price Date -->
-                <!--<com.money.manager.ex.view.RobotoTextView-->
-                <!--style="@style/Money.TextView.Header.Caption"-->
-                <!--android:layout_width="fill_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:text="@string/price_date"/>-->
-                <!--<com.money.manager.ex.view.RobotoTextView-->
-                <!--android:id="@+id/priceDateView"-->
-                <!--style="@style/Money.TextView.Widget.EditText"-->
-                <!--android:layout_width="match_parent"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:drawableLeft="?attr/ic_calendar_day"-->
-                <!--android:hint="@string/date"-->
-                <!--android:textStyle="bold"/>-->
+                    <com.money.manager.ex.view.RobotoTextView
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/total_amount" />
 
-                <!-- Value -->
-                <com.money.manager.ex.view.RobotoTextView
-                    style="@style/Money.TextView.Header.Caption"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/value" />
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/totalPriceView"
+                        style="@style/Money.TextView.Widget.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textStyle="bold"
+                        android:focusable="false"
+                        android:clickable="false" />
+                </LinearLayout>
 
-                <com.money.manager.ex.view.RobotoTextView
-                    android:id="@+id/valueView"
-                    style="@style/Money.TextView.Widget.EditText"
+                <!-- Notes -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.money.manager.ex.view.RobotoEditText
+                        android:id="@+id/notesEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="@dimen/mmx_padding"
+                        android:gravity="top|start"
+                        android:hint="@string/notes"
+                        android:inputType="textMultiLine"
+                        android:scrollHorizontally="false"
+                        android:textCursorDrawable="@null" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Current Price (hidden in share transaction mode) -->
+                <LinearLayout
+                    android:id="@+id/currentPriceSection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:textStyle="bold" />
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/current_price" />
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/currentPriceView"
+                        style="@style/Money.TextView.Widget.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawableLeft="?attr/ic_calculator"
+                        android:drawableStart="?attr/ic_calculator"
+                        android:gravity="end"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- Value (hidden in share transaction mode) -->
+                <LinearLayout
+                    android:id="@+id/valueSection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        style="@style/Money.TextView.Header.Caption"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/value" />
+
+                    <com.money.manager.ex.view.RobotoTextView
+                        android:id="@+id/valueView"
+                        style="@style/Money.TextView.Widget.EditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"
+                        android:textStyle="bold" />
+                </LinearLayout>
 
             </LinearLayout>
 

@@ -35,6 +35,7 @@ import com.money.manager.ex.R;
 import com.money.manager.ex.common.BaseRecyclerFragment;
 import com.money.manager.ex.core.ContextMenuIds;
 import com.money.manager.ex.core.MenuHelper;
+import com.money.manager.ex.core.TransactionTypes;
 import com.money.manager.ex.currency.CurrencyService;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.domainmodel.Account;
@@ -183,6 +184,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         menu.setHeaderTitle(selectedStock.getSymbol());
 
         MenuHelper menuHelper = new MenuHelper(requireActivity(), menu);
+        menuHelper.addToContextMenu(ContextMenuIds.ADJUST_TRADE);
         menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
         menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
     }
@@ -193,7 +195,10 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         ContextMenuIds menuId = ContextMenuIds.get(item.getItemId());
 
-        if (Objects.requireNonNull(menuId) == ContextMenuIds.EditPrice) {
+        if (Objects.requireNonNull(menuId) == ContextMenuIds.ADJUST_TRADE) {
+            openShareTransactionForStock(selectedStock, TransactionTypes.Withdrawal);
+            return true;
+        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.EditPrice) {
             openEditPriceActivity(selectedStock);
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DownloadPrice) {
@@ -310,7 +315,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
     @Override
     public void onFabClicked() {
-        openEditInvestmentActivity(null);
+        openShareTransactionForStock(null, TransactionTypes.Withdrawal);
     }
 
     @Override
@@ -339,6 +344,18 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         Intent intent = new Intent(getActivity(), InvestmentTransactionEditActivity.class);
         intent.putExtra(InvestmentTransactionEditActivity.ARG_ACCOUNT_ID, mAccountId);
         intent.putExtra(InvestmentTransactionEditActivity.ARG_STOCK_ID, stockId);
+        intent.setAction(Intent.ACTION_INSERT);
+        editInvestmentLauncher.launch(intent);
+    }
+
+    private void openShareTransactionForStock(Stock stock, TransactionTypes transactionType) {
+        Intent intent = new Intent(getActivity(), InvestmentTransactionEditActivity.class);
+        intent.putExtra(InvestmentTransactionEditActivity.ARG_ACCOUNT_ID, mAccountId);
+        if (stock != null) {
+            intent.putExtra(InvestmentTransactionEditActivity.ARG_STOCK_ID, stock.getId());
+        }
+        intent.putExtra(InvestmentTransactionEditActivity.ARG_NEW_SHARE_TRANSACTION, true);
+        intent.putExtra(InvestmentTransactionEditActivity.ARG_INITIAL_TRANSACTION_TYPE, transactionType.name());
         intent.setAction(Intent.ACTION_INSERT);
         editInvestmentLauncher.launch(intent);
     }

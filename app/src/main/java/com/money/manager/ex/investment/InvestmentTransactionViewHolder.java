@@ -44,6 +44,7 @@ public class InvestmentTransactionViewHolder {
         previousDayButton = view.findViewById(R.id.previousDayButton);
         nextDayButton = view.findViewById(R.id.nextDayButton);
         purchasePriceView = view.findViewById(R.id.purchasePriceView);
+        totalPriceView = view.findViewById(R.id.totalPriceView);
         commissionView = view.findViewById(R.id.commissionView);
         currentPriceView = view.findViewById(R.id.currentPriceView);
     }
@@ -61,6 +62,7 @@ public class InvestmentTransactionViewHolder {
     public FontIconView previousDayButton;
     public FontIconView nextDayButton;
     public RobotoTextView purchasePriceView;
+    public RobotoTextView totalPriceView;
     public RobotoTextView commissionView;
     public RobotoTextView currentPriceView;
 }

@@ -19,6 +19,7 @@ package com.money.manager.ex.investment;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.content.ContentValues;
 
 import androidx.appcompat.app.AlertDialog;
 import android.content.Intent;
@@ -55,6 +56,7 @@ import java.util.concurrent.Executors;
 import javax.inject.Inject;
 
 import dagger.Lazy;
+import info.javaperformance.money.Money;
 import info.javaperformance.money.MoneyFactory;
 import timber.log.Timber;
 
@@ -71,6 +73,9 @@ public class PriceEditActivity
     private StockHistoryAdapter historyAdapter;
     private RecyclerView priceHistoryRecyclerView;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private Money mStockCurrentPrice;
+    private String mInitialDateIso;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -219,9 +224,11 @@ public class PriceEditActivity
 
         String priceString = intent.getStringExtra(EditPriceDialog.ARG_PRICE);
         model.price = MoneyFactory.fromString(priceString);
+        mStockCurrentPrice = model.price;
 
         String dateString = intent.getStringExtra(EditPriceDialog.ARG_DATE);
         model.date = new MmxDate(dateString);
+        mInitialDateIso = model.date.toIsoDateString();
 
         model.currencyId = intent.getLongExtra(ARG_CURRENCY_ID, Constants.NOT_SET);
     }
@@ -257,6 +264,10 @@ public class PriceEditActivity
                         model.price = MoneyFactory.fromString(valueStr);
                         runOnUiThread(() -> model.display(this, viewHolder));
                     }
+                } else if (isoDate.equals(mInitialDateIso) && mStockCurrentPrice != null) {
+                    // No history entry for today: restore the stock's current price.
+                    model.price = mStockCurrentPrice;
+                    runOnUiThread(() -> model.display(this, viewHolder));
                 }
             } catch (Exception e) {
                 Timber.e(e, "Error loading historical price for date %s", isoDate);
@@ -268,6 +279,22 @@ public class PriceEditActivity
         executor.execute(() -> {
             try {
                 List<StockHistory> history = historyRepository.getAllPricesForSymbol(model.symbol);
+                if (mInitialDateIso != null && mStockCurrentPrice != null) {
+                    boolean hasTodayEntry = false;
+                    for (StockHistory entry : history) {
+                        if (mInitialDateIso.equals(entry.getString(StockHistory.DATE))) {
+                            hasTodayEntry = true;
+                            break;
+                        }
+                    }
+                    if (!hasTodayEntry) {
+                        ContentValues cv = new ContentValues();
+                        cv.put(StockHistory.SYMBOL, model.symbol);
+                        cv.put(StockHistory.DATE, mInitialDateIso);
+                        cv.put(StockHistory.VALUE, mStockCurrentPrice.toString());
+                        history.add(0, new StockHistory(cv));
+                    }
+                }
                 runOnUiThread(() -> {
                     historyAdapter.setData(history);
                     scrollToCurrentDate();
