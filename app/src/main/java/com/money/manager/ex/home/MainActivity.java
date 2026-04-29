@@ -774,7 +774,10 @@ public class MainActivity
     public void showAccountFragment(long accountId) {
         String tag = AccountTransactionListFragment.class.getSimpleName() + "_" + accountId;
         AccountTransactionListFragment fragment = (AccountTransactionListFragment) getSupportFragmentManager().findFragmentByTag(tag);
-        if (fragment == null || fragment.getId() != getContentId()) {
+        // Only reuse the fragment if it is currently visible. If it is in the back stack (not
+        // visible), it may have a stale mAccountId from a previous spinner-based account switch,
+        // which would cause the wrong account's transactions to be shown.
+        if (fragment == null || !fragment.isVisible()) {
             fragment = AccountTransactionListFragment.newInstance(accountId);
         }
         showFragment(fragment, tag);

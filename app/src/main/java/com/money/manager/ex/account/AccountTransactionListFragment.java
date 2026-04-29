@@ -964,6 +964,8 @@ public class AccountTransactionListFragment
 
         // switch account. Reload transactions.
         mAccountId = accountId;
+        reloadAccountInfo();
+        requireActivity().invalidateOptionsMenu();
         mAllDataListFragment.accountId = accountId;
         mAllDataListFragment.loadData(prepareQuery());
 
