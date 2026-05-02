@@ -17,9 +17,11 @@
 package com.money.manager.ex.investment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
@@ -35,11 +37,21 @@ import com.money.manager.ex.R;
 import com.money.manager.ex.common.BaseRecyclerFragment;
 import com.money.manager.ex.core.ContextMenuIds;
 import com.money.manager.ex.core.MenuHelper;
+import com.money.manager.ex.core.UIHelper;
 import com.money.manager.ex.core.TransactionTypes;
 import com.money.manager.ex.currency.CurrencyService;
+import com.money.manager.ex.datalayer.AccountTransactionRepository;
+import com.money.manager.ex.datalayer.ShareInfoRepository;
+import com.money.manager.ex.datalayer.SplitCategoryRepository;
 import com.money.manager.ex.datalayer.StockRepository;
+import com.money.manager.ex.datalayer.TaglinkRepository;
+import com.money.manager.ex.datalayer.TransactionLinkRepository;
+import com.money.manager.ex.database.ISplitTransaction;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.Stock;
+import com.money.manager.ex.domainmodel.StockHistory;
+import com.money.manager.ex.domainmodel.TransactionLink;
+import com.money.manager.ex.domainmodel.RefType;
 import com.money.manager.ex.home.MainActivity;
 import com.money.manager.ex.utils.MmxDate;
 import com.money.manager.ex.viewmodels.StockViewModel;
@@ -60,6 +72,8 @@ import androidx.preference.PreferenceManager;
 
 import java.util.List;
 import java.util.Objects;
+
+import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 
 /**
  * Use the {@link PortfolioFragment#newInstance} factory method to
@@ -187,6 +201,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         menuHelper.addToContextMenu(ContextMenuIds.ADJUST_TRADE);
         menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
         menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
+        menuHelper.addToContextMenu(ContextMenuIds.DELETE);
     }
 
     @Override
@@ -197,6 +212,9 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         if (Objects.requireNonNull(menuId) == ContextMenuIds.ADJUST_TRADE) {
             openShareTransactionForStock(selectedStock, TransactionTypes.Withdrawal);
+            return true;
+        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DELETE) {
+            showDeleteStockConfirmationDialog(selectedStock);
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.EditPrice) {
             openEditPriceActivity(selectedStock);
@@ -486,5 +504,92 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     private void setHideZeroSharesEnabled(boolean enabled) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
         preferences.edit().putBoolean(getString(R.string.pref_portfolio_hide_zero_shares), enabled).apply();
+    }
+
+    private void showDeleteStockConfirmationDialog(@NonNull Stock stock) {
+        UIHelper ui = new UIHelper(requireContext());
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.delete_stock_investment)
+                .setIcon(ui.getIcon(FontAwesome.Icon.faw_question_circle))
+                .setMessage(R.string.confirm_delete_stock_investment)
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                    new Thread(() -> {
+                        boolean deleted = deleteStockInvestment(stock);
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            if (deleted) {
+                                viewModel.loadStocks(mAccountId);
+                                Toast.makeText(getContext(), R.string.delete_success, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), R.string.db_delete_failed, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }).start();
+                })
+                .setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel())
+                .show();
+    }
+
+    private boolean deleteStockInvestment(@NonNull Stock stock) {
+        Long stockId = stock.getId();
+        if (stockId == null) return false;
+
+        TransactionLinkRepository linkRepo = new TransactionLinkRepository(requireContext());
+        AccountTransactionRepository txRepo = new AccountTransactionRepository(requireContext());
+        ShareInfoRepository shareInfoRepo = new ShareInfoRepository(requireContext());
+        SplitCategoryRepository splitRepo = new SplitCategoryRepository(requireContext());
+        TaglinkRepository taglinkRepo = new TaglinkRepository(requireContext());
+        StockRepository stockRepo = new StockRepository(requireContext());
+
+        List<TransactionLink> links = linkRepo.query(
+                new com.money.manager.ex.datalayer.Select(linkRepo.getAllColumns())
+                        .where("LOWER(" + TransactionLink.LINKTYPE + ")=? AND "
+                                        + TransactionLink.LINKRECORDID + "=?",
+                                "stock", String.valueOf(stockId))
+        );
+
+        for (TransactionLink link : links) {
+            Long transactionId = link.getCheckingAccountId();
+            if (transactionId != null) {
+                com.money.manager.ex.domainmodel.ShareInfo shareInfo =
+                        shareInfoRepo.loadByTransactionId(transactionId);
+                if (shareInfo != null && shareInfo.getId() != null) {
+                    shareInfoRepo.delete(shareInfo.getId());
+                }
+
+                List<ISplitTransaction> splitCategories = splitRepo.loadSplitCategoriesFor(transactionId);
+                if (splitCategories != null) {
+                    for (ISplitTransaction split : splitCategories) {
+                        if (split == null || split.getId() == null) continue;
+                        taglinkRepo.deleteForType(split.getId(), split.getTransactionModel());
+                        splitRepo.delete(split);
+                    }
+                }
+
+                taglinkRepo.deleteForType(transactionId, RefType.TRANSACTION);
+                txRepo.delete(transactionId);
+            }
+
+            if (link.getId() != null) {
+                linkRepo.delete(link.getId());
+            }
+        }
+
+        boolean stockDeleted = stockRepo.delete(stockId);
+        if (!stockDeleted) return false;
+
+        String symbol = stock.getSymbol();
+        if (!TextUtils.isEmpty(symbol) && stockRepo.loadBySymbol(symbol).isEmpty()) {
+            com.money.manager.ex.datalayer.StockHistoryRepository historyRepo =
+                    new com.money.manager.ex.datalayer.StockHistoryRepository(requireContext());
+            List<StockHistory> prices = historyRepo.getAllPricesForSymbol(symbol);
+            for (StockHistory price : prices) {
+                if (price != null && price.getId() != null) {
+                    historyRepo.delete(price.getId());
+                }
+            }
+        }
+
+        return true;
     }
 }
