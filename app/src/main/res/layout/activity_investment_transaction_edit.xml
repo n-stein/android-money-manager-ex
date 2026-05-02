@@ -213,6 +213,12 @@
                         android:focusable="true" />
                 </LinearLayout>
 
+                <com.money.manager.ex.view.RobotoCheckBox
+                    android:id="@+id/checkBoxTransfer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transfer" />
+
                 <!-- Stock Name -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"

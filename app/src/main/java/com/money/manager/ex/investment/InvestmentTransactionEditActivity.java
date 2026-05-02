@@ -27,6 +27,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
@@ -49,6 +50,7 @@ import com.money.manager.ex.datalayer.AccountTransactionRepository;
 import com.money.manager.ex.datalayer.PayeeRepository;
 import com.money.manager.ex.datalayer.Select;
 import com.money.manager.ex.datalayer.ShareInfoRepository;
+import com.money.manager.ex.datalayer.StockHistoryRepository;
 import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.datalayer.TransactionLinkRepository;
 import com.money.manager.ex.domainmodel.Account;
@@ -56,6 +58,7 @@ import com.money.manager.ex.domainmodel.AccountTransaction;
 import com.money.manager.ex.domainmodel.Payee;
 import com.money.manager.ex.domainmodel.ShareInfo;
 import com.money.manager.ex.domainmodel.Stock;
+import com.money.manager.ex.domainmodel.StockHistory;
 import com.money.manager.ex.domainmodel.TransactionLink;
 import com.money.manager.ex.database.ITransactionEntity;
 import com.money.manager.ex.servicelayer.AccountService;
@@ -347,6 +350,13 @@ public class InvestmentTransactionEditActivity
             mLinkedTransaction.setStatus(mStatusCodes.get(mViewHolder.statusSpinner.getSelectedItemPosition()));
             mLinkedTransaction.setPayeeId(mPayeeIds.get(mViewHolder.payeeSpinner.getSelectedItemPosition()));
             mLinkedTransaction.setCategoryId(mCategoryId);
+            Long accountId = mLinkedTransaction.getAccountId();
+            if (accountId == null || accountId == Constants.NOT_SET) {
+                accountId = mStock.getHeldAt();
+            }
+            mLinkedTransaction.setToAccountId(isTransferTransaction()
+                ? accountId
+                : Constants.NOT_SET);
         } else {
             mStock.setNotes(mViewHolder.notesEdit.getText().toString());
         }
@@ -384,8 +394,20 @@ public class InvestmentTransactionEditActivity
             selectId(viewHolder.payeeSpinner, mPayeeIds, mLinkedTransaction.getPayeeId());
             mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
             loadCategoryName(mCategoryId);
+            if (viewHolder.transferCheckBox != null) {
+                viewHolder.transferCheckBox.setVisibility(View.VISIBLE);
+                Long accountId = mLinkedTransaction.getAccountId();
+                if (accountId == null || accountId == Constants.NOT_SET) {
+                    accountId = mStock.getHeldAt();
+                }
+                Long toAccountId = mLinkedTransaction.getToAccountId();
+                viewHolder.transferCheckBox.setChecked(toAccountId != null && toAccountId.equals(accountId));
+            }
         } else {
             viewHolder.notesEdit.setText(stock.getNotes());
+            if (viewHolder.transferCheckBox != null) {
+                viewHolder.transferCheckBox.setVisibility(View.GONE);
+            }
         }
         displayCategoryName();
         showCommission();
@@ -430,6 +452,15 @@ public class InvestmentTransactionEditActivity
         mViewHolder.currentPriceView.setOnClickListener(view -> {
             onCurrentPriceClick();
         });
+
+        if (mViewHolder.transferCheckBox != null) {
+            mViewHolder.transferCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    setDirty(true);
+                }
+            });
+        }
 
         if (mIsStockOverviewMode) {
             applyStockOverviewMode();
@@ -605,33 +636,72 @@ public class InvestmentTransactionEditActivity
             // Sync amount then persist the accounting transaction.
             mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
                     .add(mStock.getCommission()));
+            ensureTransactionPayee(mLinkedTransaction);
             txRepo.update(mLinkedTransaction);
             // Persist per-transaction share data.
             saveOrUpdateShareInfo(mLinkedTransaction.getId());
+            // Recalculate cumulative position after editing an existing trade.
+            if (mStock.getId() != null) {
+                recalculateStockPosition(mStock.getId(), stockRepo);
+            }
         } else {
             // New share transaction (or plain stock save with no linked transaction).
             if (mLinkedTransaction != null && mOriginalStockDate != null) {
                 mStock.setPurchaseDate(mOriginalStockDate);
             }
-            if (mStock.getId() != null) {
+
+            if (mStock.getId() == null) {
+                // Brand-new stock: initialize CURRENTPRICE from purchase price before inserting.
+                if (mStock.getCurrentPrice().isZero()) {
+                    mStock.setCurrentPrice(mStock.getPurchasePrice());
+                }
+                stockRepo.add(mStock);
+            } else if (mLinkedTransaction == null) {
+                // Existing stock with no new trade (plain portfolio overview save).
                 stockRepo.save(mStock);
             } else {
-                stockRepo.add(mStock);
+                // Existing stock + new share transaction: update only name/symbol here;
+                // the cumulative position is recalculated below after recording the trade.
+                Stock current = stockRepo.load(mStock.getId());
+                if (current != null) {
+                    current.setName(mStock.getName());
+                    current.setSymbol(mStock.getSymbol());
+                    stockRepo.save(current);
+                }
             }
 
             if (mLinkedTransaction != null) {
                 mLinkedTransaction.setAccountId(mStock.getHeldAt());
                 mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
                         .add(mStock.getCommission()));
+                ensureTransactionPayee(mLinkedTransaction);
                 txRepo.insert(mLinkedTransaction);
 
                 TransactionLink link = new TransactionLink();
                 link.setCheckingAccountId(mLinkedTransaction.getId());
-                link.setLinkType("stock");
+                link.setLinkType("Stock");
                 link.setLinkRecordId(mStock.getId());
                 new TransactionLinkRepository(getApplicationContext()).add(link);
 
                 saveOrUpdateShareInfo(mLinkedTransaction.getId());
+
+                // Add a manual price history entry so the Desktop and price charts have data.
+                String symbol = mStock.getSymbol();
+                Money price = mStock.getPurchasePrice();
+                Date tradeDate = mLinkedTransaction.getDate();
+                if (symbol != null && !symbol.isEmpty() && price != null && !price.isZero()
+                        && tradeDate != null) {
+                    StockHistoryRepository histRepo =
+                            new StockHistoryRepository(getApplicationContext());
+                    if (!histRepo.recordExists(symbol, tradeDate)) {
+                        StockHistory sh = histRepo.getStockHistory(symbol, price, tradeDate);
+                        sh.contentValues.put(StockHistory.UPDTYPE, 2L); // Manual
+                        histRepo.add(sh);
+                    }
+                }
+
+                // Recalculate cumulative STOCK_V1 position from all recorded trades.
+                recalculateStockPosition(mStock.getId(), stockRepo);
             }
         }
 
@@ -643,10 +713,26 @@ public class InvestmentTransactionEditActivity
             mShareInfo = new ShareInfo();
         }
         mShareInfo.setCheckingAccountId(transactionId);
-        mShareInfo.setShareNumber(mStock.getNumberOfShares());
+
+        // Sells (Deposit) store a negative share count to match Desktop behavior.
+        double shares = mStock.getNumberOfShares();
+        if (mLinkedTransaction != null
+                && mLinkedTransaction.getTransactionType() == TransactionTypes.Deposit) {
+            shares = -Math.abs(shares);
+        }
+        mShareInfo.setShareNumber(shares);
         mShareInfo.setSharePrice(mStock.getPurchasePrice().toDouble());
         mShareInfo.setShareCommission(mStock.getCommission().toDouble());
+        if (mStock.getId() != null) {
+            mShareInfo.setShareLot(String.valueOf(mStock.getId()));
+        }
         new ShareInfoRepository(getApplicationContext()).save(mShareInfo);
+    }
+
+    private boolean isTransferTransaction() {
+        return mViewHolder != null
+            && mViewHolder.transferCheckBox != null
+            && mViewHolder.transferCheckBox.isChecked();
     }
 
     private AccountTransaction loadLinkedTransaction(long stockId) {
@@ -859,5 +945,73 @@ public class InvestmentTransactionEditActivity
         // number of shares, price?
 
         return true;
+    }
+
+    /**
+     * Ensures the transaction has a valid PAYEEID.
+     * If no payee is selected, finds or creates one named after the stock.
+     */
+    private void ensureTransactionPayee(AccountTransaction tx) {
+        if (tx.hasPayee()) return;
+
+        String payeeName = !TextUtils.isEmpty(mStock.getName())
+                ? mStock.getName() : mStock.getSymbol();
+        if (TextUtils.isEmpty(payeeName)) return;
+
+        PayeeRepository payeeRepo = new PayeeRepository(getApplicationContext());
+        Payee payee = payeeRepo.loadByName(payeeName);
+        if (payee == null) {
+            payee = new Payee();
+            payee.setName(payeeName);
+            payeeRepo.add(payee);
+        }
+        tx.setPayeeId(payee.getId());
+    }
+
+    /**
+     * Recomputes STOCK_V1 (NUMSHARES, PURCHASEPRICE, CURRENTPRICE) from all TRANSLINK entries
+     * for the given stock, matching the Desktop's update_data_position() logic.
+     */
+    private void recalculateStockPosition(long stockId, StockRepository stockRepo) {
+        TransactionLinkRepository linkRepo = new TransactionLinkRepository(getApplicationContext());
+        List<TransactionLink> links = linkRepo.query(
+                new Select(linkRepo.getAllColumns())
+                        .where("LOWER(" + TransactionLink.LINKTYPE + ")=? AND "
+                                       + TransactionLink.LINKRECORDID + "=?",
+                               "stock", String.valueOf(stockId))
+        );
+        if (links.isEmpty()) return;
+
+        ShareInfoRepository shareInfoRepo = new ShareInfoRepository(getApplicationContext());
+        double totalShares = 0.0;
+        double weightedCost = 0.0;
+        double latestPrice = 0.0;
+
+        for (TransactionLink link : links) {
+            if (link.getCheckingAccountId() == null) continue;
+            ShareInfo si = shareInfoRepo.loadByTransactionId(link.getCheckingAccountId());
+            if (si == null) continue;
+            double shares = si.getShareNumber() != null ? si.getShareNumber() : 0.0;
+            double price = si.getSharePrice() != null ? si.getSharePrice() : 0.0;
+            totalShares += shares;
+            if (shares > 0) {
+                weightedCost += shares * price;
+            }
+            if (price > 0) {
+                latestPrice = price;
+            }
+        }
+
+        Stock stock = stockRepo.load(stockId);
+        if (stock == null) return;
+
+        stock.setNumberOfShares(totalShares);
+        if (totalShares > 0 && weightedCost > 0) {
+            stock.setPurchasePrice(MoneyFactory.fromDouble(weightedCost / totalShares));
+        }
+        if (stock.getCurrentPrice().isZero() && latestPrice > 0) {
+            stock.setCurrentPrice(MoneyFactory.fromDouble(latestPrice));
+        }
+        stockRepo.save(stock);
     }
 }

@@ -10,12 +10,18 @@ FROM (
         where not(mobiledata.status = 'V')
             and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal')
             and mobiledata.ID not in (
-                select CHECKINGACCOUNTID
-                from TRANSLINK_V1
-                where lower(LINKTYPE) = 'stock'
+                select tl.CHECKINGACCOUNTID
+                from TRANSLINK_V1 tl
+                join CHECKINGACCOUNT_V1 ca on ca.TRANSID = tl.CHECKINGACCOUNTID
+                where lower(tl.LINKTYPE) = 'stock'
+                    and ca.TOACCOUNTID is not null
+                    and ca.TOACCOUNTID <> -1
                 union
-                select CHECKINGACCOUNTID
-                from SHAREINFO_V1
+                select si.CHECKINGACCOUNTID
+                from SHAREINFO_V1 si
+                join CHECKINGACCOUNT_V1 ca on ca.TRANSID = si.CHECKINGACCOUNTID
+                where ca.TOACCOUNTID is not null
+                    and ca.TOACCOUNTID <> -1
             )
         group by month, year, transactiontype
         ) sub1
@@ -36,13 +42,19 @@ FROM (
     where not(mobiledata.status = 'V')
             and lower(mobiledata.transactiontype) in ('deposit', 'withdrawal')
             and mobiledata.ID not in (
-                select CHECKINGACCOUNTID
-                from TRANSLINK_V1
-                where lower(LINKTYPE) = 'stock'
-                union
-                select CHECKINGACCOUNTID
-                from SHAREINFO_V1
-            )
+                        select tl.CHECKINGACCOUNTID
+                        from TRANSLINK_V1 tl
+                        join CHECKINGACCOUNT_V1 ca on ca.TRANSID = tl.CHECKINGACCOUNTID
+                        where lower(tl.LINKTYPE) = 'stock'
+                            and ca.TOACCOUNTID is not null
+                            and ca.TOACCOUNTID <> -1
+                        union
+                        select si.CHECKINGACCOUNTID
+                        from SHAREINFO_V1 si
+                        join CHECKINGACCOUNT_V1 ca on ca.TRANSID = si.CHECKINGACCOUNTID
+                        where ca.TOACCOUNTID is not null
+                            and ca.TOACCOUNTID <> -1
+                    )
     group by month, year, transactiontype
     ) sub1
 ) SUB2
