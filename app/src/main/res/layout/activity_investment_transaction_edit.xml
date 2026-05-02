@@ -101,23 +101,25 @@
                 <!-- Account -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/mmx_avatar_item_height"
                     android:animateLayoutChanges="true"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <com.money.manager.ex.view.RobotoTextView
-                        android:id="@+id/accountLabel"
-                        style="@style/Money.TextView.Header.Caption"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0"
-                        android:text="@string/account" />
+                    <com.mikepenz.iconics.view.IconicsImageView
+                        app:iiv_icon="mmx-temple"
+                        app:iiv_color="?android:textColorSecondary"
+                        app:iiv_size="@dimen/mmx_icon_size"
+                        android:layout_width="@dimen/mmx_side_icon_size"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="@dimen/mmx_side_icon_margin"
+                        android:layout_marginEnd="@dimen/mmx_side_icon_margin"
+                        android:layout_gravity="center_vertical"/>
 
                     <Spinner
                         android:id="@+id/spinnerAccount"
                         style="@style/Base.Widget.AppCompat.Spinner.Underlined"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1" />
                 </LinearLayout>
 
@@ -125,89 +127,113 @@
                 <LinearLayout
                     android:id="@+id/shareTransactionSection"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/mmx_avatar_item_height"
                     android:animateLayoutChanges="true"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <com.money.manager.ex.view.RobotoTextView
-                        android:id="@+id/transactionTypeLabel"
-                        style="@style/Money.TextView.Header.Caption"
-                        android:layout_width="match_parent"
+                    <com.mikepenz.iconics.view.IconicsImageView
+                        app:iiv_icon="gmd-swap_vert"
+                        app:iiv_color="?android:textColorSecondary"
+                        app:iiv_size="@dimen/mmx_icon_size"
+                        android:layout_width="@dimen/mmx_side_icon_size"
                         android:layout_height="wrap_content"
-                        android:text="@string/transaction_type" />
+                        android:layout_marginRight="@dimen/mmx_side_icon_margin"
+                        android:layout_marginEnd="@dimen/mmx_side_icon_margin"
+                        android:layout_gravity="center_vertical"/>
 
                     <Spinner
                         android:id="@+id/spinnerTransactionType"
                         style="@style/Base.Widget.AppCompat.Spinner.Underlined"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="match_parent" />
                 </LinearLayout>
 
                 <!-- Status -->
                 <LinearLayout
                     android:id="@+id/shareStatusSection"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/mmx_avatar_item_height"
                     android:animateLayoutChanges="true"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <com.money.manager.ex.view.RobotoTextView
-                        android:id="@+id/statusLabel"
-                        style="@style/Money.TextView.Header.Caption"
-                        android:layout_width="match_parent"
+                    <com.mikepenz.iconics.view.IconicsImageView
+                        app:iiv_icon="gmd-edit"
+                        app:iiv_color="?android:textColorSecondary"
+                        app:iiv_size="@dimen/mmx_icon_size"
+                        android:layout_width="@dimen/mmx_side_icon_size"
                         android:layout_height="wrap_content"
-                        android:text="@string/status" />
+                        android:layout_marginRight="@dimen/mmx_side_icon_margin"
+                        android:layout_marginEnd="@dimen/mmx_side_icon_margin"
+                        android:layout_gravity="center_vertical"/>
 
                     <Spinner
                         android:id="@+id/spinnerStatus"
                         style="@style/Base.Widget.AppCompat.Spinner.Underlined"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="match_parent" />
                 </LinearLayout>
 
                 <!-- Payee -->
                 <LinearLayout
                     android:id="@+id/sharePayeeSection"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/mmx_avatar_item_height"
                     android:animateLayoutChanges="true"
-                    android:orientation="vertical">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
 
-                    <com.money.manager.ex.view.RobotoTextView
-                        android:id="@+id/payeeLabel"
-                        style="@style/Money.TextView.Header.Caption"
-                        android:layout_width="match_parent"
+                    <com.mikepenz.iconics.view.IconicsImageView
+                        app:iiv_icon="gmd-group"
+                        app:iiv_color="?android:textColorSecondary"
+                        app:iiv_size="@dimen/mmx_icon_size"
+                        android:layout_width="@dimen/mmx_side_icon_size"
                         android:layout_height="wrap_content"
-                        android:text="@string/payee" />
+                        android:layout_marginRight="@dimen/mmx_side_icon_margin"
+                        android:layout_marginEnd="@dimen/mmx_side_icon_margin"
+                        android:layout_gravity="center_vertical"/>
 
-                    <Spinner
-                        android:id="@+id/spinnerPayee"
-                        style="@style/Base.Widget.AppCompat.Spinner.Underlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        <com.money.manager.ex.view.RobotoTextView
+                            android:id="@+id/textViewPayee"
+                            style="@style/Money.TextView.Widget.EditText"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="match_parent"
+                            android:hint="@string/payee"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <ImageButton
+                            android:id="@+id/removePayeeButton"
+                            android:layout_width="@dimen/mmx_button_height"
+                            android:layout_height="@dimen/mmx_button_height"
+                            android:theme="@style/Money.Button.Colored.Theme" />
                 </LinearLayout>
 
                 <!-- Category -->
                 <LinearLayout
                     android:id="@+id/shareCategorySection"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="@dimen/mmx_avatar_item_height"
                     android:animateLayoutChanges="true"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <com.money.manager.ex.view.RobotoTextView
-                        android:id="@+id/categoryLabel"
-                        style="@style/Money.TextView.Header.Caption"
-                        android:layout_width="match_parent"
+                    <com.mikepenz.iconics.view.IconicsImageView
+                        app:iiv_icon="gmd-label_outline"
+                        app:iiv_color="?android:textColorSecondary"
+                        app:iiv_size="@dimen/mmx_icon_size"
+                        android:layout_width="@dimen/mmx_side_icon_size"
                         android:layout_height="wrap_content"
-                        android:text="@string/category" />
+                        android:layout_marginRight="@dimen/mmx_side_icon_margin"
+                        android:layout_marginEnd="@dimen/mmx_side_icon_margin"
+                        android:layout_gravity="center_vertical"/>
 
                     <com.money.manager.ex.view.RobotoTextView
                         android:id="@+id/textViewCategory"
+                        style="@style/Money.TextView.Widget.EditText"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="8dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:hint="@string/category"
                         android:text=""
                         android:clickable="true"
                         android:focusable="true" />

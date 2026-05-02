@@ -72,6 +72,9 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
+import com.squareup.sqlbrite3.BriteDatabase;
+import com.money.manager.ex.transactions.EditTransactionCommonFunctions;
+import com.money.manager.ex.domainmodel.SplitCategory;
 
 import dagger.Lazy;
 import info.javaperformance.money.Money;
@@ -95,6 +98,9 @@ public class InvestmentTransactionEditActivity
     public static final int REQUEST_CURRENT_PRICE = 4;
 
     @Inject Lazy<MmxDateTimeUtils> dateTimeUtilsLazy;
+    @Inject BriteDatabase database;
+
+    private EditTransactionCommonFunctions mCommon;
 
     private Account mAccount;
     private Stock mStock;
@@ -203,6 +209,10 @@ public class InvestmentTransactionEditActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (mCommon != null) {
+            mCommon.onActivityResult(requestCode, resultCode, data);
+        }
+
         if (resultCode == Activity.RESULT_CANCELED || data == null) return;
 
         Money amount = Calculator.getAmountFromResult(data);
@@ -247,11 +257,18 @@ public class InvestmentTransactionEditActivity
                 break;
 
             case RequestCodes.CATEGORY:
-                long categoryId = data.getLongExtra(CategoryListActivity.INTENT_RESULT_CATEGID, Constants.NOT_SET);
-                if (categoryId != Constants.NOT_SET) {
-                    mCategoryId = categoryId;
-                    mCategoryName = data.getStringExtra(CategoryListActivity.INTENT_RESULT_CATEGNAME);
+                if (mCommon != null) {
+                    long selectedId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+                    mCategoryId = selectedId;
+                    mCategoryName = mCommon.categoryName;
                     displayCategoryName();
+                } else {
+                    long selectedId = data.getLongExtra(CategoryListActivity.INTENT_RESULT_CATEGID, Constants.NOT_SET);
+                    if (selectedId != Constants.NOT_SET) {
+                        mCategoryId = selectedId;
+                        mCategoryName = data.getStringExtra(CategoryListActivity.INTENT_RESULT_CATEGNAME);
+                        displayCategoryName();
+                    }
                 }
                 break;
         }
@@ -348,8 +365,15 @@ public class InvestmentTransactionEditActivity
             mLinkedTransaction.setNotes(mViewHolder.notesEdit.getText().toString());
             mLinkedTransaction.setTransactionType(mTransactionTypes.get(mViewHolder.transactionTypeSpinner.getSelectedItemPosition()));
             mLinkedTransaction.setStatus(mStatusCodes.get(mViewHolder.statusSpinner.getSelectedItemPosition()));
-            mLinkedTransaction.setPayeeId(mPayeeIds.get(mViewHolder.payeeSpinner.getSelectedItemPosition()));
-            mLinkedTransaction.setCategoryId(mCategoryId);
+            if (mCommon != null) {
+                // mCommon updates transactionEntity directly via its controls
+                // ensure local category id reflects common functions
+                mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+                mLinkedTransaction.setCategoryId(mCategoryId);
+            } else {
+                // No shared controls available; keep existing payee and set category from UI state
+                mLinkedTransaction.setCategoryId(mCategoryId);
+            }
             Long accountId = mLinkedTransaction.getAccountId();
             if (accountId == null || accountId == Constants.NOT_SET) {
                 accountId = mStock.getHeldAt();
@@ -391,9 +415,16 @@ public class InvestmentTransactionEditActivity
             viewHolder.notesEdit.setText(mLinkedTransaction.getNotes());
             selectTransactionType(mLinkedTransaction.getTransactionType());
             selectStatus(mLinkedTransaction.getStatus());
-            selectId(viewHolder.payeeSpinner, mPayeeIds, mLinkedTransaction.getPayeeId());
-            mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
-            loadCategoryName(mCategoryId);
+            if (mCommon != null) {
+                mCommon.loadPayeeName(mLinkedTransaction.getPayeeId() == null ? Constants.NOT_SET : mLinkedTransaction.getPayeeId());
+                mCommon.showPayeeName();
+                mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+                mCommon.categoryName = mCategoryName;
+                mCommon.displayCategoryName();
+            } else {
+                mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+                loadCategoryName(mCategoryId);
+            }
             if (viewHolder.transferCheckBox != null) {
                 viewHolder.transferCheckBox.setVisibility(View.VISIBLE);
                 Long accountId = mLinkedTransaction.getAccountId();
@@ -758,13 +789,23 @@ public class InvestmentTransactionEditActivity
 
         initTransactionTypeSelector(viewHolder.transactionTypeSpinner);
         initStatusSelector(viewHolder.statusSpinner);
-        initPayeeSelector(viewHolder.payeeSpinner);
-        initCategorySelector(viewHolder.categoryTextView);
+
+        // Use shared transaction controls for payee/category to match normal transactions.
+        if (mLinkedTransaction != null) {
+            mCommon = new EditTransactionCommonFunctions(this, mLinkedTransaction, database);
+            mCommon.findControls(this);
+            // populate payee and category names
+            mCommon.loadPayeeName(mLinkedTransaction.getPayeeId() == null ? Constants.NOT_SET : mLinkedTransaction.getPayeeId());
+            mCommon.categoryName = mCategoryName;
+            mCommon.initPayeeControls();
+            mCommon.initCategoryControls(SplitCategory.class.getSimpleName());
+            mCommon.showPayeeName();
+            mCommon.displayCategoryName();
+        }
 
         viewHolder.transactionTypeSpinner.setEnabled(true);
         viewHolder.statusSpinner.setEnabled(true);
-        viewHolder.payeeSpinner.setEnabled(true);
-        viewHolder.categoryTextView.setEnabled(true);
+        if (viewHolder.categoryTextView != null) viewHolder.categoryTextView.setEnabled(true);
     }
 
     private void updateShareTransactionSectionVisibility() {
@@ -875,7 +916,8 @@ public class InvestmentTransactionEditActivity
         }
 
         if (TextUtils.isEmpty(mCategoryName)) {
-            mViewHolder.categoryTextView.setText(getString(R.string.status_none));
+            // Keep empty text so the control hint is shown, matching normal transaction UI.
+            mViewHolder.categoryTextView.setText("");
         } else {
             mViewHolder.categoryTextView.setText(mCategoryName);
         }

@@ -35,7 +35,7 @@ public class InvestmentTransactionViewHolder {
         accountSpinner = view.findViewById(R.id.spinnerAccount);
         transactionTypeSpinner = view.findViewById(R.id.spinnerTransactionType);
         statusSpinner = view.findViewById(R.id.spinnerStatus);
-        payeeSpinner = view.findViewById(R.id.spinnerPayee);
+        textViewPayee = view.findViewById(R.id.textViewPayee);
         categoryTextView = view.findViewById(R.id.textViewCategory);
         transferCheckBox = view.findViewById(R.id.checkBoxTransfer);
         dateView = view.findViewById(R.id.textViewDate);
@@ -54,7 +54,7 @@ public class InvestmentTransactionViewHolder {
     public Spinner accountSpinner;
     public Spinner transactionTypeSpinner;
     public Spinner statusSpinner;
-    public Spinner payeeSpinner;
+    public TextView textViewPayee;
     public TextView categoryTextView;
     public RobotoCheckBox transferCheckBox;
     public RobotoTextView dateView;
