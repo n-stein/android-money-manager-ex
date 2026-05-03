@@ -419,6 +419,7 @@ public class InvestmentTransactionEditActivity
                 mCommon.loadPayeeName(mLinkedTransaction.getPayeeId() == null ? Constants.NOT_SET : mLinkedTransaction.getPayeeId());
                 mCommon.showPayeeName();
                 mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+                loadCategoryName(mCategoryId);
                 mCommon.categoryName = mCategoryName;
                 mCommon.displayCategoryName();
             } else {
@@ -499,11 +500,9 @@ public class InvestmentTransactionEditActivity
     }
 
     private void applyStockOverviewMode() {
-        // Date: non-interactive
-        mViewHolder.dateView.setOnClickListener(null);
-        mViewHolder.dateView.setClickable(false);
-        mViewHolder.previousDayButton.setVisibility(View.GONE);
-        mViewHolder.nextDayButton.setVisibility(View.GONE);
+        mViewHolder.dateView.setClickable(true);
+        mViewHolder.previousDayButton.setVisibility(View.VISIBLE);
+        mViewHolder.nextDayButton.setVisibility(View.VISIBLE);
 
         // Account spinner: read-only
         mViewHolder.accountSpinner.setEnabled(false);
@@ -792,6 +791,8 @@ public class InvestmentTransactionEditActivity
 
         // Use shared transaction controls for payee/category to match normal transactions.
         if (mLinkedTransaction != null) {
+            mCategoryId = mLinkedTransaction.getCategoryId() == null ? Constants.NOT_SET : mLinkedTransaction.getCategoryId();
+            loadCategoryName(mCategoryId);
             mCommon = new EditTransactionCommonFunctions(this, mLinkedTransaction, database);
             mCommon.findControls(this);
             // populate payee and category names
