@@ -374,7 +374,7 @@ public class SummaryOfAccountsReportFragment extends Fragment {
                 + "WHERE lower(tl2.LINKTYPE) = 'stock' AND tl2.LINKRECORDID = s.STOCKID "
                 + "AND (t2.DELETEDTIME IS NULL OR t2.DELETEDTIME = '') "
                 + "AND t2.STATUS IN ('R', 'F', 'D', '') "
-                + "AND date(t2.TRANSDATE) <= date(h.DATE)), 0) * (h.VALUE - ifnull("
+                + "AND date(t2.TRANSDATE) < date(h.DATE)), 0) * (h.VALUE - ifnull("
                 + "(SELECT h2.VALUE FROM STOCKHISTORY_V1 h2 "
                 + "WHERE h2.SYMBOL = s.SYMBOL AND date(h2.DATE) < date(h.DATE) "
                 + "ORDER BY h2.DATE DESC LIMIT 1), "
