@@ -95,6 +95,7 @@ public class PriceEditActivity
         viewHolder = new EditPriceViewHolder();
         viewHolder.bind(this);
         viewHolder.amountTextView.setOnClickListener(view -> onPriceClick());
+        viewHolder.addButton.setOnClickListener(view -> onAddClick());
         viewHolder.dateTextView.setOnClickListener(view -> onDateClick());
         viewHolder.previousDayButton.setOnClickListener(view -> onPreviousDayClick());
         viewHolder.nextDayButton.setOnClickListener(view -> onNextDayClick());
@@ -142,10 +143,12 @@ public class PriceEditActivity
                 Timber.d("going back");
                 break;
             case MenuHelper.save:
-                save();
-                setResult(Activity.RESULT_OK);
-                finish();
-                return onActionDoneClick();
+                if (save()) {
+                    setResult(Activity.RESULT_OK);
+                    finish();
+                    return onActionDoneClick();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -381,7 +384,15 @@ public class PriceEditActivity
                 });
     }
 
-    private void save() {
+    private void onAddClick() {
+        if (save()) {
+            loadHistory();
+            loadHistoricalPriceForCurrentDate();
+            scrollToCurrentDate();
+        }
+    }
+
+    private boolean save() {
         StockRepository repo = new StockRepository(this);
         repo.updateCurrentPrice(model.symbol, model.price);
 
@@ -391,5 +402,6 @@ public class PriceEditActivity
             Toast.makeText(this, getString(R.string.error_update_currency_exchange_rate),
                     Toast.LENGTH_SHORT).show();
         }
+        return result;
     }
 }
