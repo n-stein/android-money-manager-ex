@@ -686,6 +686,8 @@
 
     <string name="view_transactions">View transactions</string>
     <string name="view_transactions_sub">View transactions with subcategories</string>
+    <string name="open_yahoo_finance">Open Yahoo Finance</string>
+    <string name="no_browser_available">No browser available</string>
     <string name="switch_active">Switch Active/Inactive</string>
     <string name="error_downloading_symbol">Error downloading price for symbol</string>
     <string name="error_updating_rates">Error updating rates</string>

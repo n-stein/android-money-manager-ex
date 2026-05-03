@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 
@@ -200,6 +201,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         MenuHelper menuHelper = new MenuHelper(requireActivity(), menu);
         menu.add(Menu.NONE, ContextMenuIds.VIEW_TRANSACTIONS.getId(), Menu.NONE, R.string.view_transactions);
+        menu.add(Menu.NONE, ContextMenuIds.OPEN_YAHOO_FINANCE.getId(), Menu.NONE, R.string.open_yahoo_finance);
         menuHelper.addToContextMenu(ContextMenuIds.ADJUST_TRADE);
         menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
         menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
@@ -226,6 +228,9 @@ public class PortfolioFragment extends BaseRecyclerFragment {
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DownloadPrice) {
             viewModel.downloadStockPrice(selectedStock.getSymbol());
+            return true;
+        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.OPEN_YAHOO_FINANCE) {
+            openYahooFinance(selectedStock);
             return true;
         }
 
@@ -401,6 +406,19 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         String dateString = new MmxDate().toIsoDateString();
         intent.putExtra(EditPriceDialog.ARG_DATE, dateString);
         editPriceLauncher.launch(intent);
+    }
+
+    private void openYahooFinance(Stock stock) {
+        String symbol = stock.getSymbol();
+        if (symbol == null || symbol.isEmpty()) return;
+
+        String url = "https://finance.yahoo.com/quote/" + Uri.encode(symbol);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        try {
+            startActivity(intent);
+        } catch (android.content.ActivityNotFoundException e) {
+            Toast.makeText(requireContext(), getString(R.string.no_browser_available), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupActivityResultLaunchers() {
