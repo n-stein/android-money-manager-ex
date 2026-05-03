@@ -47,33 +47,59 @@ public class StockPriceRepository {
                 if (response.body() != null && response.body().chart != null && response.body().chart.result != null) {
                     YahooChartResponse.Result result = response.body().chart.result.get(0);
 
-                    if (result.timestamps == null || result.indicators == null ||
-                            result.indicators.quote == null || result.indicators.quote.isEmpty() ||
-                            result.indicators.quote.get(0).closePrices == null) {
+                    // Try to read price/time series first
+                    List<Long> timestamps = (result.timestamps == null) ? null : result.timestamps;
+                    List<Double> prices = null;
+                    if (result.indicators != null && result.indicators.quote != null && !result.indicators.quote.isEmpty()) {
+                        prices = result.indicators.quote.get(0).closePrices;
+                    }
+
+                    // If series data is missing, try falling back to meta.regularMarketPrice/time
+                    if ((timestamps == null || timestamps.isEmpty() || prices == null || prices.isEmpty())) {
+                        if (result.meta != null && result.meta.regularMarketPrice != null && result.meta.regularMarketTime != null) {
+                            try {
+                                double latestPrice = result.meta.regularMarketPrice;
+                                long latestTimestamp = result.meta.regularMarketTime;
+                                Date date = new MmxDate(latestTimestamp * 1000L).toDate();
+                                Money moneyPrice = MoneyFactory.fromDouble(latestPrice);
+
+                                stockRepository.updateCurrentPrice(symbol, moneyPrice);
+                                stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
+
+                                SecurityPriceModel model = new SecurityPriceModel();
+                                model.symbol = symbol;
+                                model.price = moneyPrice;
+                                model.date = date;
+                                liveData.postValue(model);
+                                return;
+                            } catch (Exception e) {
+                                Timber.e(e, "Error updating stock price from meta fallback");
+                                liveData.postValue(null);
+                                return;
+                            }
+                        }
+
                         Timber.e("Invalid stock price data for symbol: %s", symbol);
                         liveData.postValue(null);
                         return;
                     }
 
                     try {
-                    List<Long> timestamps = result.timestamps;
-                    List<Double> prices = result.indicators.quote.get(0).closePrices;
+                        if (!timestamps.isEmpty() && !prices.isEmpty()) {
+                            double latestPrice = prices.get(prices.size() - 1);
+                            long latestTimestamp = timestamps.get(timestamps.size() - 1);
+                            Date date = new MmxDate(latestTimestamp * 1000L).toDate();
+                            Money moneyPrice = MoneyFactory.fromDouble(latestPrice);
 
-                    if (!timestamps.isEmpty() && !prices.isEmpty()) {
-                        double latestPrice = prices.get(prices.size() - 1);
-                        long latestTimestamp = timestamps.get(timestamps.size() - 1);
-                        Date date = new MmxDate(latestTimestamp).toDate();
-                        Money moneyPrice = MoneyFactory.fromDouble(latestPrice);
+                            stockRepository.updateCurrentPrice(symbol, moneyPrice);
+                            stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
 
-                        stockRepository.updateCurrentPrice(symbol, moneyPrice);
-                        stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
-
-                        SecurityPriceModel model = new SecurityPriceModel();
-                        model.symbol = symbol;
-                        model.price = moneyPrice;
-                        model.date = date;
-                        liveData.postValue(model);
-                    }
+                            SecurityPriceModel model = new SecurityPriceModel();
+                            model.symbol = symbol;
+                            model.price = moneyPrice;
+                            model.date = date;
+                            liveData.postValue(model);
+                        }
                     }
                     catch (Exception e) {
                         Timber.e(e, "Error updating stock price");
