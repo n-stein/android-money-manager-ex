@@ -100,6 +100,7 @@ public class SummaryOfAccountsReportFragment extends Fragment {
 
     private static final String COL_STOCK_PURCHASE_DATE = "PURCHASEDATE";
     private static final String COL_STOCK_INITIAL_VALUE = "INITIALVALUE";
+    private static final String COL_STOCK_SHARE_DATE = "SHAREDATE";
     private static final String COL_STOCK_PRICE_DATE = "PRICEDATE";
     private static final String COL_STOCK_VALUE_DELTA = "VALUEDELTA";
 
@@ -311,24 +312,29 @@ public class SummaryOfAccountsReportFragment extends Fragment {
     }
 
     private void loadStockMarketValues(BuildState state) {
-        loadStockInitialValues(state);
+        loadStockShareEvents(state);
         loadStockPriceDeltas(state);
     }
 
-    // Adds one event per stock at PURCHASEDATE using the last known price at or before that date,
-    // falling back to PURCHASEPRICE if no history exists yet.
-    private void loadStockInitialValues(BuildState state) {
+    // Adds one event per stock transaction so the market value follows the shares held on that date
+    // instead of the stock row's current NUMSHARES.
+    private void loadStockShareEvents(BuildState state) {
         Cursor cursor = executeSqlQuery("SELECT "
                 + "s.HELDAT AS ACCOUNTID, "
-                + "date(s.PURCHASEDATE) AS PURCHASEDATE, "
-                + "s.NUMSHARES * ifnull("
+                + "date(t.TRANSDATE) AS SHAREDATE, "
+                + "ifnull(si.SHARENUMBER, 0) * ifnull("
                 + "(SELECT h.VALUE FROM STOCKHISTORY_V1 h "
-                + "WHERE h.SYMBOL = s.SYMBOL AND date(h.DATE) <= date(s.PURCHASEDATE) "
+                + "WHERE h.SYMBOL = s.SYMBOL AND date(h.DATE) <= date(t.TRANSDATE) "
                 + "ORDER BY h.DATE DESC LIMIT 1), "
-                + "s.PURCHASEPRICE) * ifnull(c.BASECONVRATE, 1) AS INITIALVALUE "
+                + "s.PURCHASEPRICE) * ifnull(c.BASECONVRATE, 1) AS VALUEDELTA "
                 + "FROM stock_v1 s "
                 + "JOIN ACCOUNTLIST_V1 a ON s.HELDAT = a.ACCOUNTID "
-                + "LEFT JOIN CURRENCYFORMATS_V1 c ON a.CURRENCYID = c.CURRENCYID");
+                + "LEFT JOIN CURRENCYFORMATS_V1 c ON a.CURRENCYID = c.CURRENCYID "
+                + "JOIN TRANSLINK_V1 tl ON lower(tl.LINKTYPE) = 'stock' AND tl.LINKRECORDID = s.STOCKID "
+                + "JOIN CHECKINGACCOUNT_V1 t ON t.TRANSID = tl.CHECKINGACCOUNTID "
+                + "JOIN SHAREINFO_V1 si ON si.CHECKINGACCOUNTID = t.TRANSID "
+                + "WHERE (t.DELETEDTIME IS NULL OR t.DELETEDTIME = '') "
+                + "AND t.STATUS IN ('R', 'F', 'D', '')");
 
         if (cursor == null) {
             return;
@@ -341,14 +347,14 @@ public class SummaryOfAccountsReportFragment extends Fragment {
                     continue;
                 }
 
-                LocalDate purchaseDate = parseDate(cursor.getString(cursor.getColumnIndexOrThrow(COL_STOCK_PURCHASE_DATE)));
-                if (purchaseDate == null) {
-                    purchaseDate = LocalDate.now();
+                LocalDate shareDate = parseDate(cursor.getString(cursor.getColumnIndexOrThrow(COL_STOCK_SHARE_DATE)));
+                if (shareDate == null) {
+                    shareDate = LocalDate.now();
                 }
 
-                double initialValue = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_STOCK_INITIAL_VALUE));
-                state.events.add(new BalanceEvent(purchaseDate, accountId, initialValue));
-                state.minDate = minDate(state.minDate, purchaseDate);
+                double valueDelta = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_STOCK_VALUE_DELTA));
+                state.events.add(new BalanceEvent(shareDate, accountId, valueDelta));
+                state.minDate = minDate(state.minDate, shareDate);
             }
         } finally {
             cursor.close();
@@ -356,12 +362,19 @@ public class SummaryOfAccountsReportFragment extends Fragment {
     }
 
     // Adds one delta event per STOCKHISTORY entry after PURCHASEDATE: the change in market value
-    // (price difference × shares × base rate) so the running total tracks historical prices.
+    // based on the shares held on that price date, so the running total tracks historical prices
+    // and historical share counts.
     private void loadStockPriceDeltas(BuildState state) {
         Cursor cursor = executeSqlQuery("SELECT "
                 + "s.HELDAT AS ACCOUNTID, "
                 + "date(h.DATE) AS PRICEDATE, "
-                + "s.NUMSHARES * (h.VALUE - ifnull("
+                + "ifnull((SELECT SUM(si2.SHARENUMBER) FROM TRANSLINK_V1 tl2 "
+                + "JOIN CHECKINGACCOUNT_V1 t2 ON t2.TRANSID = tl2.CHECKINGACCOUNTID "
+                + "JOIN SHAREINFO_V1 si2 ON si2.CHECKINGACCOUNTID = t2.TRANSID "
+                + "WHERE lower(tl2.LINKTYPE) = 'stock' AND tl2.LINKRECORDID = s.STOCKID "
+                + "AND (t2.DELETEDTIME IS NULL OR t2.DELETEDTIME = '') "
+                + "AND t2.STATUS IN ('R', 'F', 'D', '') "
+                + "AND date(t2.TRANSDATE) <= date(h.DATE)), 0) * (h.VALUE - ifnull("
                 + "(SELECT h2.VALUE FROM STOCKHISTORY_V1 h2 "
                 + "WHERE h2.SYMBOL = s.SYMBOL AND date(h2.DATE) < date(h.DATE) "
                 + "ORDER BY h2.DATE DESC LIMIT 1), "
