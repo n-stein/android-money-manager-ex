@@ -239,6 +239,40 @@ public class PriceEditActivity
             model.date = new MmxDate(date);
             model.price = price;
             model.display(this, viewHolder);
+        }, (item, position) -> {
+            // confirm deletion then delete in background; if the row is synthetic (no DB entry) remove from UI
+            new AlertDialog.Builder(PriceEditActivity.this)
+                    .setMessage(R.string.confirmDelete)
+                    .setPositiveButton(android.R.string.ok, (d, w) -> executor.execute(() -> {
+                        try {
+                            String isoDate = item.getString(com.money.manager.ex.domainmodel.StockHistory.DATE);
+                            StockHistoryRepository repo = new StockHistoryRepository(PriceEditActivity.this);
+                            // check if a DB record exists for that date
+                            com.money.manager.ex.domainmodel.StockHistory dbEntry = repo.getPriceForDate(model.symbol, isoDate);
+                            if (dbEntry != null) {
+                                long deleted = repo.deletePrice(model.symbol, isoDate);
+                                if (deleted > 0) {
+                                    runOnUiThread(() -> {
+                                        loadHistory();
+                                        loadHistoricalPriceForCurrentDate();
+                                    });
+                                }
+                            } else {
+                                // synthetic row: remove from adapter and, if visible, clear the editor price
+                                runOnUiThread(() -> {
+                                    historyAdapter.removeAt(position);
+                                    if (isoDate.equals(model.date.toIsoDateString())) {
+                                        model.price = MoneyFactory.fromDouble(0);
+                                        model.display(PriceEditActivity.this, viewHolder);
+                                    }
+                                });
+                            }
+                        } catch (Exception e) {
+                            Timber.e(e, "Error deleting price");
+                        }
+                    }))
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
         });
         priceHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         priceHistoryRecyclerView.setAdapter(historyAdapter);

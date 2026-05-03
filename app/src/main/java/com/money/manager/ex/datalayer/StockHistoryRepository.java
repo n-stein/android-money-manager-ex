@@ -243,6 +243,18 @@ public class StockHistoryRepository
     }
 
     /**
+     * Delete a single price history record for a symbol on the specified ISO date.
+     * @param symbol stock symbol
+     * @param isoDate ISO date string (yyyy-MM-dd)
+     * @return number of deleted records
+     */
+    public long deletePrice(String symbol, String isoDate) {
+        String where = StockHistory.SYMBOL + "=? AND " + StockHistory.DATE + "=?";
+        long deleted = getContext().getContentResolver().delete(getUri(), where, new String[] { symbol, isoDate });
+        return deleted;
+    }
+
+    /**
      * deletes all automatic price history
      * @return number of deleted records
      */
