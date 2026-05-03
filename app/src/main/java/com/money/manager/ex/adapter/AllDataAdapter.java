@@ -88,6 +88,7 @@ public class AllDataAdapter
         ATTACHMENTCOUNT,
         CURRENCYID, PAYEE, ACCOUNTNAME, CATEGORY, NOTES,
         TOCURRENCYID, TOACCOUNTID, TOAMOUNT, TOACCOUNTNAME, TAGS, COLOR,
+        TXTOACCOUNTID,
         SPLITTED, CATEGID, ISSTOCKLINKED,
         SHARENUMBER, SHAREPRICE, SHARECOMMISSION, SHARELOT, STOCKNAME;
 
@@ -209,8 +210,20 @@ public class AllDataAdapter
 
         // text color amount
         int amountTextColor;
-        if (isTransfer || isStockLinked) {
+        if (isTransfer) {
             amountTextColor = ContextCompat.getColor(mContext, R.color.material_blue_700); // gray is not well-visible in dark
+        } else if (isStockLinked) {
+            long toAccountId = cursor.getLong(cursor.getColumnIndexOrThrow(TXTOACCOUNTID));
+            if (toAccountId != Constants.NOT_SET) {
+                // Transfer-marked stock transaction.
+                amountTextColor = ContextCompat.getColor(mContext, R.color.material_blue_700);
+            } else if (TransactionTypes.valueOf(transactionType).equals(TransactionTypes.Deposit)) {
+                // Non-transfer stock sell.
+                amountTextColor = ContextCompat.getColor(mContext, R.color.material_green_700);
+            } else {
+                // Non-transfer stock buy.
+                amountTextColor = ContextCompat.getColor(mContext, R.color.material_red_700);
+            }
         } else if (TransactionTypes.valueOf(transactionType).equals(TransactionTypes.Deposit)) {
             amountTextColor = ContextCompat.getColor(mContext, R.color.material_green_700);
         } else {
@@ -388,6 +401,7 @@ public class AllDataAdapter
         TRANSACTIONTYPE = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.TransactionType : QueryBillDeposits.TRANSCODE;
         CURRENCYID = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.CURRENCYID : QueryBillDeposits.CURRENCYID;
         TOACCOUNTID = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.TOACCOUNTID : QueryBillDeposits.TOACCOUNTID;
+        TXTOACCOUNTID = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.TXTOACCOUNTID : QueryBillDeposits.TOACCOUNTID;
         TOAMOUNT = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.ToAmount : QueryBillDeposits.TOTRANSAMOUNT;
         TOCURRENCYID = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.ToCurrencyId : QueryBillDeposits.CURRENCYID;
         TOACCOUNTNAME = mTypeCursor == TypeCursor.ALLDATA ? QueryAllData.ToAccountName : QueryBillDeposits.TOACCOUNTNAME;

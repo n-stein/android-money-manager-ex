@@ -22,6 +22,7 @@ SELECT
     FromAcc.AccountID AS AccountID,
     FromAcc.AccountName AS AccountName,
     ifnull(ToAcc.AccountId, FromAcc.AccountId) AS ToAccountID,
+    ifnull(TX.TOACCOUNTID, -1) AS TXToAccountID,
     ifnull(ToAcc.AccountName, FromAcc.AccountName) AS ToAccountName,
     TX.ToTransAmount AS ToAmount,
     ifnull(ToAcc.CurrencyId, FromAcc.CurrencyID) AS ToCurrencyID,

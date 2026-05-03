@@ -703,6 +703,7 @@ public class AllDataListFragment
             DatabaseUtils.cursorDoubleToCursorValues(cursor, adapter.AMOUNT, values);
             DatabaseUtils.cursorDoubleToCursorValues(cursor, adapter.TOAMOUNT, values);
             DatabaseUtils.cursorLongToContentValues(cursor, adapter.ISSTOCKLINKED, values);
+            DatabaseUtils.cursorLongToContentValues(cursor, adapter.TXTOACCOUNTID, values);
 
             DatabaseUtils.cursorStringToContentValues(cursor, adapter.STATUS, values);
             if (values.getAsString(adapter.STATUS).equalsIgnoreCase("V")) {
@@ -715,8 +716,13 @@ public class AllDataListFragment
             transactionType = TransactionTypes.valueOf(transType);
 
             Long isStockLinked = values.getAsLong(adapter.ISSTOCKLINKED);
-            if (isStockLinked != null && isStockLinked == 1L) {
-                // Treat stock-linked cash movements as transfer-like in list totals.
+                Long toAccountId = values.getAsLong(adapter.TXTOACCOUNTID);
+            boolean isStockTransfer = isStockLinked != null
+                    && isStockLinked == 1L
+                    && toAccountId != null
+                    && toAccountId != Constants.NOT_SET;
+            if (isStockTransfer) {
+                // Treat only transfer-marked stock cash movements as transfer-like in list totals.
                 continue;
             }
 

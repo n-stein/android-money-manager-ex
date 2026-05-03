@@ -46,6 +46,7 @@ public class QueryAllData
     public static final String PAYEEID = "PayeeID";
     public static final String ToAccountName = "ToAccountName";
     public static final String TOACCOUNTID = "ToAccountID";
+    public static final String TXTOACCOUNTID = "TXToAccountID";
     public static final String ToAmount = "ToAmount";
     public static final String ToCurrencyId = "ToCurrencyID";
     public static final String TransactionNumber = "TransactionNumber";
@@ -76,7 +77,7 @@ public class QueryAllData
         return new String[]{"ID AS _id", ID, TransactionType, Date, Year, Month, Day, ATTACHMENTCOUNT,
                 Category, AMOUNT, BaseConvRate, CURRENCYID, AccountName, ACCOUNTID,
                 SPLITTED, CATEGID, PAYEENAME, PAYEEID, TransactionNumber, STATUS, Notes,
-                ToAccountName, TOACCOUNTID, ToAmount, ToCurrencyId,
+                ToAccountName, TOACCOUNTID, TXTOACCOUNTID, ToAmount, ToCurrencyId,
             currency, TAGS, COLOR, ISSTOCKLINKED,
             SHARENUMBER, SHAREPRICE, SHARECOMMISSION, SHARELOT, STOCKNAME,
             STOCKID, STOCKACCOUNTID};
