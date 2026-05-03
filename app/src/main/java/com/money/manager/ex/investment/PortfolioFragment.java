@@ -33,6 +33,7 @@ import android.view.ContextMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.money.manager.ex.Constants;
 import com.money.manager.ex.R;
 import com.money.manager.ex.common.BaseRecyclerFragment;
 import com.money.manager.ex.core.ContextMenuIds;
@@ -195,9 +196,10 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     public void onCreateContextMenu(@NonNull ContextMenu menu, @NonNull View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
-        menu.setHeaderTitle(selectedStock.getSymbol());
+        menu.setHeaderTitle(getStockLabel(selectedStock));
 
         MenuHelper menuHelper = new MenuHelper(requireActivity(), menu);
+        menu.add(Menu.NONE, ContextMenuIds.VIEW_TRANSACTIONS.getId(), Menu.NONE, R.string.view_transactions);
         menuHelper.addToContextMenu(ContextMenuIds.ADJUST_TRADE);
         menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
         menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
@@ -212,6 +214,9 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         if (Objects.requireNonNull(menuId) == ContextMenuIds.ADJUST_TRADE) {
             openShareTransactionForStock(selectedStock, TransactionTypes.Withdrawal);
+            return true;
+        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.VIEW_TRANSACTIONS) {
+            openStockTransactions(selectedStock);
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DELETE) {
             showDeleteStockConfirmationDialog(selectedStock);
@@ -364,6 +369,15 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         intent.putExtra(InvestmentTransactionEditActivity.ARG_STOCK_ID, stockId);
         intent.setAction(Intent.ACTION_INSERT);
         editInvestmentLauncher.launch(intent);
+    }
+
+    private void openStockTransactions(@NonNull Stock stock) {
+        Intent intent = new Intent(getActivity(), StockTransactionListActivity.class);
+        intent.putExtra(StockTransactionListActivity.EXTRA_STOCK_ID, stock.getId());
+        if (stock.getHeldAt() != Constants.NOT_SET) {
+            intent.putExtra(StockTransactionListActivity.EXTRA_ACCOUNT_ID, stock.getHeldAt());
+        }
+        startActivity(intent);
     }
 
     private void openShareTransactionForStock(Stock stock, TransactionTypes transactionType) {
@@ -591,5 +605,24 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         }
 
         return true;
+    }
+
+    private String getStockLabel(@NonNull Stock stock) {
+        String name = stock.getName();
+        String symbol = stock.getSymbol();
+
+        if (!TextUtils.isEmpty(name) && !TextUtils.isEmpty(symbol) && !name.equals(symbol)) {
+            return name + " (" + symbol + ")";
+        }
+
+        if (!TextUtils.isEmpty(name)) {
+            return name;
+        }
+
+        if (!TextUtils.isEmpty(symbol)) {
+            return symbol;
+        }
+
+        return getString(R.string.portfolio);
     }
 }
