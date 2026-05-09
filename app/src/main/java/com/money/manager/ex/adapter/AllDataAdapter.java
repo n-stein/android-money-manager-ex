@@ -21,8 +21,6 @@ import android.database.Cursor;
 import android.graphics.Color;
 import androidx.core.content.ContextCompat;
 import android.text.Html;
-import android.text.Spannable;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
@@ -37,7 +35,6 @@ import com.money.manager.ex.core.TransactionTypes;
 import com.money.manager.ex.currency.CurrencyService;
 import com.money.manager.ex.database.QueryAllData;
 import com.money.manager.ex.database.QueryBillDeposits;
-import com.money.manager.ex.database.QueryMobileData;
 import com.money.manager.ex.database.TransactionStatus;
 import com.money.manager.ex.datalayer.CategoryRepository;
 import com.money.manager.ex.domainmodel.Category;
@@ -59,26 +56,6 @@ import info.javaperformance.money.MoneyFactory;
  */
 public class AllDataAdapter
     extends CursorAdapter {
-
-    public AllDataAdapter(Context context, Cursor c, TypeCursor typeCursor) {
-        super(context, c, -1);
-
-        this.mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mHeadersAccountIndex = new HashMap<>();
-        mCheckedPosition = new SparseBooleanArray();
-        mTypeCursor = typeCursor;
-        mContext = context;
-
-        this.requestingBalanceUpdate = new ArrayList<>();
-
-        setFieldFromTypeCursor();
-    }
-
-    // source type: AllData or RecurringTransaction
-    public enum TypeCursor {
-        ALLDATA,
-        RECURRINGTRANSACTION
-    }
 
     // type cursor
     private final TypeCursor mTypeCursor;
@@ -105,6 +82,26 @@ public class AllDataAdapter
     private final Context mContext;
     private HashMap<Long, Money> balances;
     private final ArrayList<TextView> requestingBalanceUpdate;
+
+    public AllDataAdapter(Context context, Cursor c, TypeCursor typeCursor) {
+        super(context, c, -1);
+
+        this.mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mHeadersAccountIndex = new HashMap<>();
+        mCheckedPosition = new SparseBooleanArray();
+        mTypeCursor = typeCursor;
+        mContext = context;
+
+        this.requestingBalanceUpdate = new ArrayList<>();
+
+        setFieldFromTypeCursor();
+    }
+
+    // source type: AllData or RecurringTransaction
+    public enum TypeCursor {
+        ALLDATA,
+        RECURRINGTRANSACTION
+    }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {

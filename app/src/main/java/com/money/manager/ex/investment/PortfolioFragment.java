@@ -102,13 +102,9 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
     // Header views (from merge_header_fragment_account)
     private TextView txtTotalBalance;
-    private View tableRowCashBalance;
     private TextView txtCashBalance;
-    private View tableRowMarketValue;
     private TextView txtMarketValue;
-    private View tableRowInvested;
     private TextView txtInvested;
-    private View tableRowGainLoss;
     private TextView txtGainLoss;
 
     // Cached values for combined header update
@@ -172,13 +168,13 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         if (reconciledValue != null) reconciledValue.setVisibility(View.GONE);
 
         txtTotalBalance = root.findViewById(R.id.textViewAccountBalance);
-        tableRowCashBalance = root.findViewById(R.id.tableRowCashBalance);
+        View tableRowCashBalance = root.findViewById(R.id.tableRowCashBalance);
         txtCashBalance = root.findViewById(R.id.textViewCashBalance);
-        tableRowMarketValue = root.findViewById(R.id.tableRowMarketValue);
+        View tableRowMarketValue = root.findViewById(R.id.tableRowMarketValue);
         txtMarketValue = root.findViewById(R.id.textViewMarketValue);
-        tableRowInvested = root.findViewById(R.id.tableRowInvested);
+        View tableRowInvested = root.findViewById(R.id.tableRowInvested);
         txtInvested = root.findViewById(R.id.textViewInvested);
-        tableRowGainLoss = root.findViewById(R.id.tableRowGainLoss);
+        View tableRowGainLoss = root.findViewById(R.id.tableRowGainLoss);
         txtGainLoss = root.findViewById(R.id.textViewGainLoss);
 
         if (tableRowCashBalance != null) tableRowCashBalance.setVisibility(View.VISIBLE);
@@ -306,26 +302,35 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         CurrencyService currencyService = new CurrencyService(requireContext().getApplicationContext());
         long currencyId = mAccount.getCurrencyId();
+        InvestmentTotals totals = calculateInvestmentTotals(mStocks, mAccountBalance);
 
+        txtTotalBalance.setText(currencyService.getCurrencyFormatted(currencyId, mAccountBalance));
+        setHeaderAmount(txtCashBalance, currencyService, currencyId, totals.cashBalance);
+        setHeaderAmount(txtMarketValue, currencyService, currencyId, totals.marketValue);
+        setHeaderAmount(txtInvested, currencyService, currencyId, totals.invested);
+        if (txtGainLoss != null) {
+            txtGainLoss.setText(formatGainLoss(currencyService, currencyId, totals.gainLoss, totals.invested));
+        }
+    }
+
+    private InvestmentTotals calculateInvestmentTotals(List<Stock> stocks, Money accountBalance) {
         Money marketValue = MoneyFactory.fromDouble(0);
         Money invested = MoneyFactory.fromDouble(0);
-        for (Stock s : mStocks) {
+        for (Stock s : stocks) {
             marketValue = marketValue.add(s.getCurrentPrice().multiply(s.getNumberOfShares()));
             invested = invested.add(s.getPurchasePrice().multiply(s.getNumberOfShares()));
         }
 
-        Money cashBalance = mAccountBalance.subtract(marketValue);
+        Money cashBalance = accountBalance.subtract(marketValue);
         Money gainLoss = marketValue.subtract(invested);
+        return new InvestmentTotals(cashBalance, marketValue, invested, gainLoss);
+    }
 
-        txtTotalBalance.setText(currencyService.getCurrencyFormatted(currencyId, mAccountBalance));
-        if (txtCashBalance != null)
-            txtCashBalance.setText(currencyService.getCurrencyFormatted(currencyId, cashBalance));
-        if (txtMarketValue != null)
-            txtMarketValue.setText(currencyService.getCurrencyFormatted(currencyId, marketValue));
-        if (txtInvested != null)
-            txtInvested.setText(currencyService.getCurrencyFormatted(currencyId, invested));
-        if (txtGainLoss != null)
-            txtGainLoss.setText(formatGainLoss(currencyService, currencyId, gainLoss, invested));
+    private void setHeaderAmount(TextView view, CurrencyService currencyService, long currencyId,
+                                 Money value) {
+        if (view != null) {
+            view.setText(currencyService.getCurrencyFormatted(currencyId, value));
+        }
     }
 
     private String formatGainLoss(CurrencyService currencyService, long currencyId,
@@ -569,35 +574,9 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         TaglinkRepository taglinkRepo = new TaglinkRepository(requireContext());
         StockRepository stockRepo = new StockRepository(requireContext());
 
-        List<TransactionLink> links = linkRepo.query(
-                new com.money.manager.ex.datalayer.Select(linkRepo.getAllColumns())
-                        .where("LOWER(" + TransactionLink.LINKTYPE + ")=? AND "
-                                        + TransactionLink.LINKRECORDID + "=?",
-                                "stock", String.valueOf(stockId))
-        );
-
+        List<TransactionLink> links = getStockLinks(linkRepo, stockId);
         for (TransactionLink link : links) {
-            Long transactionId = link.getCheckingAccountId();
-            if (transactionId != null) {
-                com.money.manager.ex.domainmodel.ShareInfo shareInfo =
-                        shareInfoRepo.loadByTransactionId(transactionId);
-                if (shareInfo != null && shareInfo.getId() != null) {
-                    shareInfoRepo.delete(shareInfo.getId());
-                }
-
-                List<ISplitTransaction> splitCategories = splitRepo.loadSplitCategoriesFor(transactionId);
-                if (splitCategories != null) {
-                    for (ISplitTransaction split : splitCategories) {
-                        if (split == null || split.getId() == null) continue;
-                        taglinkRepo.deleteForType(split.getId(), split.getTransactionModel());
-                        splitRepo.delete(split);
-                    }
-                }
-
-                taglinkRepo.deleteForType(transactionId, RefType.TRANSACTION);
-                txRepo.delete(transactionId);
-            }
-
+            deleteLinkedTransactionData(link, shareInfoRepo, splitRepo, taglinkRepo, txRepo);
             if (link.getId() != null) {
                 linkRepo.delete(link.getId());
             }
@@ -606,19 +585,89 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         boolean stockDeleted = stockRepo.delete(stockId);
         if (!stockDeleted) return false;
 
-        String symbol = stock.getSymbol();
-        if (!TextUtils.isEmpty(symbol) && stockRepo.loadBySymbol(symbol).isEmpty()) {
-            com.money.manager.ex.datalayer.StockHistoryRepository historyRepo =
-                    new com.money.manager.ex.datalayer.StockHistoryRepository(requireContext());
-            List<StockHistory> prices = historyRepo.getAllPricesForSymbol(symbol);
-            for (StockHistory price : prices) {
-                if (price != null && price.getId() != null) {
-                    historyRepo.delete(price.getId());
-                }
-            }
-        }
+        deleteOrphanPriceHistory(stock, stockRepo);
 
         return true;
+    }
+
+    private List<TransactionLink> getStockLinks(TransactionLinkRepository linkRepo, long stockId) {
+        return linkRepo.query(
+                new com.money.manager.ex.datalayer.Select(linkRepo.getAllColumns())
+                        .where("LOWER(" + TransactionLink.LINKTYPE + ")=? AND "
+                                        + TransactionLink.LINKRECORDID + "=?",
+                                "stock", String.valueOf(stockId))
+        );
+    }
+
+    private void deleteLinkedTransactionData(TransactionLink link,
+                                             ShareInfoRepository shareInfoRepo,
+                                             SplitCategoryRepository splitRepo,
+                                             TaglinkRepository taglinkRepo,
+                                             AccountTransactionRepository txRepo) {
+        Long transactionId = link.getCheckingAccountId();
+        if (transactionId == null) {
+            return;
+        }
+
+        deleteShareInfo(transactionId, shareInfoRepo);
+        deleteSplitData(transactionId, splitRepo, taglinkRepo);
+        taglinkRepo.deleteForType(transactionId, RefType.TRANSACTION);
+        txRepo.delete(transactionId);
+    }
+
+    private void deleteShareInfo(long transactionId, ShareInfoRepository shareInfoRepo) {
+        com.money.manager.ex.domainmodel.ShareInfo shareInfo =
+                shareInfoRepo.loadByTransactionId(transactionId);
+        if (shareInfo != null && shareInfo.getId() != null) {
+            shareInfoRepo.delete(shareInfo.getId());
+        }
+    }
+
+    private void deleteSplitData(long transactionId, SplitCategoryRepository splitRepo,
+                                 TaglinkRepository taglinkRepo) {
+        List<ISplitTransaction> splitCategories = splitRepo.loadSplitCategoriesFor(transactionId);
+        if (splitCategories == null) {
+            return;
+        }
+
+        for (ISplitTransaction split : splitCategories) {
+            if (split == null || split.getId() == null) {
+                continue;
+            }
+            taglinkRepo.deleteForType(split.getId(), split.getTransactionModel());
+            splitRepo.delete(split);
+        }
+    }
+
+    private void deleteOrphanPriceHistory(@NonNull Stock stock, StockRepository stockRepo) {
+        String symbol = stock.getSymbol();
+        if (TextUtils.isEmpty(symbol) || !stockRepo.loadBySymbol(symbol).isEmpty()) {
+            return;
+        }
+
+        com.money.manager.ex.datalayer.StockHistoryRepository historyRepo =
+                new com.money.manager.ex.datalayer.StockHistoryRepository(requireContext());
+        List<StockHistory> prices = historyRepo.getAllPricesForSymbol(symbol);
+        for (StockHistory price : prices) {
+            if (price != null && price.getId() != null) {
+                historyRepo.delete(price.getId());
+            }
+        }
+    }
+
+    private static final class InvestmentTotals {
+        private final Money cashBalance;
+        private final Money marketValue;
+        private final Money invested;
+        private final Money gainLoss;
+
+        private InvestmentTotals(Money cashBalance, Money marketValue, Money invested,
+                                 Money gainLoss) {
+            this.cashBalance = cashBalance;
+            this.marketValue = marketValue;
+            this.invested = invested;
+            this.gainLoss = gainLoss;
+        }
     }
 
     private String getStockLabel(@NonNull Stock stock) {

@@ -33,6 +33,27 @@ import com.shamanland.fonticon.FontIconView;
  * View Holder for Investment transaction editing.
  */
 public class InvestmentTransactionViewHolder {
+    public Spinner accountSpinner;
+    public Spinner transactionTypeSpinner;
+    public Spinner statusSpinner;
+    public TextView textViewPayee;
+    public TextView categoryTextView;
+    public RobotoCheckBox transferCheckBox;
+    public RobotoTextView dateView;
+    public RobotoTextView numSharesView;
+    public RobotoEditText stockNameEdit;
+    public RobotoEditText symbolEdit;
+    public RobotoEditText notesEdit;
+    public FontIconView previousDayButton;
+    public FontIconView nextDayButton;
+    public RobotoTextView purchasePriceView;
+    public RobotoTextView totalPriceView;
+    public RobotoTextView commissionView;
+    public RobotoTextView currentPriceView;
+    public RobotoTextView valueView;
+    public Button buyButton;
+    public Button sellButton;
+
     public InvestmentTransactionViewHolder(Activity activity) {
         accountSpinner = activity.findViewById(R.id.spinnerAccount);
         transactionTypeSpinner = activity.findViewById(R.id.spinnerTransactionType);
@@ -55,25 +76,4 @@ public class InvestmentTransactionViewHolder {
         buyButton = activity.findViewById(R.id.buyButton);
         sellButton = activity.findViewById(R.id.sellButton);
     }
-
-    public Spinner accountSpinner;
-    public Spinner transactionTypeSpinner;
-    public Spinner statusSpinner;
-    public TextView textViewPayee;
-    public TextView categoryTextView;
-    public RobotoCheckBox transferCheckBox;
-    public RobotoTextView dateView;
-    public RobotoTextView numSharesView;
-    public RobotoEditText stockNameEdit;
-    public RobotoEditText symbolEdit;
-    public RobotoEditText notesEdit;
-    public FontIconView previousDayButton;
-    public FontIconView nextDayButton;
-    public RobotoTextView purchasePriceView;
-    public RobotoTextView totalPriceView;
-    public RobotoTextView commissionView;
-    public RobotoTextView currentPriceView;
-    public RobotoTextView valueView;
-    public Button buyButton;
-    public Button sellButton;
 }

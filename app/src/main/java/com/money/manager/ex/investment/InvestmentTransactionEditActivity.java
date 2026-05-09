@@ -30,7 +30,6 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
-import android.widget.TextView;
 
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 import com.mikepenz.google_material_typeface_library.GoogleMaterial;
@@ -111,12 +110,11 @@ public class InvestmentTransactionEditActivity
     private long mCategoryId = Constants.NOT_SET;
     private String mCategoryName = "";
     private String mInitialTransactionType = null;
-    private java.util.Date mOriginalStockDate = null;
+    private Date mOriginalStockDate = null;
     private ShareInfo mShareInfo = null;
 
     private final ArrayList<TransactionTypes> mTransactionTypes = new ArrayList<>();
     private final ArrayList<String> mStatusCodes = new ArrayList<>();
-    private final ArrayList<Long> mPayeeIds = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,7 +159,7 @@ public class InvestmentTransactionEditActivity
             // ShareInfo and override the stock's cumulative position values for display.
             if (mLinkedTransaction != null && mLinkedTransaction.hasId()) {
                 mShareInfo = new ShareInfoRepository(this).loadByTransactionId(mLinkedTransaction.getId());
-                java.util.Date txDate = mLinkedTransaction.getDate();
+                Date txDate = mLinkedTransaction.getDate();
                 if (txDate != null) {
                     mStock.setPurchaseDate(txDate);
                 }
@@ -179,7 +177,7 @@ public class InvestmentTransactionEditActivity
                 if (mAccount != null) {
                     mLinkedTransaction.setAccountId(mAccount.getId());
                 }
-                java.util.Date today = new MmxDate().toDate();
+                Date today = new MmxDate().toDate();
                 mLinkedTransaction.setDate(today);
                 if (mInitialTransactionType != null) {
                     try {
@@ -780,22 +778,6 @@ public class InvestmentTransactionEditActivity
             && mViewHolder.transferCheckBox.isChecked();
     }
 
-    private AccountTransaction loadLinkedTransaction(long stockId) {
-        TransactionLinkRepository linkRepository = new TransactionLinkRepository(this);
-        TransactionLink link = linkRepository.first(
-            linkRepository.getAllColumns(),
-            "LOWER(" + TransactionLink.LINKTYPE + ")=? AND " + TransactionLink.LINKRECORDID + "=?",
-            new String[]{"stock", Long.toString(stockId)},
-            TransactionLink.TRANSLINKID + " DESC"
-        );
-
-        if (link == null || link.getCheckingAccountId() == null) {
-            return null;
-        }
-
-        return new AccountTransactionRepository(this).load(link.getCheckingAccountId());
-    }
-
     private void initTransactionDetailsControls(InvestmentTransactionViewHolder viewHolder) {
         if (!mIsShareTransactionMode) {
             return;
@@ -828,21 +810,20 @@ public class InvestmentTransactionEditActivity
         int shareVis = mIsShareTransactionMode ? View.VISIBLE : View.GONE;
         int stockVis = mIsShareTransactionMode ? View.GONE : View.VISIBLE;
 
-        View shareSection = findViewById(R.id.shareTransactionSection);
-        View statusSection = findViewById(R.id.shareStatusSection);
-        View payeeSection = findViewById(R.id.sharePayeeSection);
-        View categorySection = findViewById(R.id.shareCategorySection);
-        View totalSection = findViewById(R.id.totalPriceSection);
-        View currentPriceSection = findViewById(R.id.currentPriceSection);
-        View valueSection = findViewById(R.id.valueSection);
+        setSectionVisibility(R.id.shareTransactionSection, shareVis);
+        setSectionVisibility(R.id.shareStatusSection, shareVis);
+        setSectionVisibility(R.id.sharePayeeSection, shareVis);
+        setSectionVisibility(R.id.shareCategorySection, shareVis);
+        setSectionVisibility(R.id.totalPriceSection, shareVis);
+        setSectionVisibility(R.id.currentPriceSection, stockVis);
+        setSectionVisibility(R.id.valueSection, stockVis);
+    }
 
-        if (shareSection != null) shareSection.setVisibility(shareVis);
-        if (statusSection != null) statusSection.setVisibility(shareVis);
-        if (payeeSection != null) payeeSection.setVisibility(shareVis);
-        if (categorySection != null) categorySection.setVisibility(shareVis);
-        if (totalSection != null) totalSection.setVisibility(shareVis);
-        if (currentPriceSection != null) currentPriceSection.setVisibility(stockVis);
-        if (valueSection != null) valueSection.setVisibility(stockVis);
+    private void setSectionVisibility(int viewId, int visibility) {
+        View view = findViewById(viewId);
+        if (view != null) {
+            view.setVisibility(visibility);
+        }
     }
 
     private void initTransactionTypeSelector(Spinner spinner) {
@@ -880,39 +861,6 @@ public class InvestmentTransactionEditActivity
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
-    }
-
-    private void initPayeeSelector(Spinner spinner) {
-        mPayeeIds.clear();
-        ArrayList<String> payeeNames = new ArrayList<>();
-        mPayeeIds.add(Constants.NOT_SET);
-        payeeNames.add(getString(R.string.status_none));
-
-        PayeeRepository repository = new PayeeRepository(this);
-        List<Payee> payees = repository.query(new Select(repository.getAllColumns()).orderBy("UPPER(" + Payee.PAYEENAME + ")"));
-        for (Payee payee : payees) {
-            if (!payee.getActive()) {
-                continue;
-            }
-            mPayeeIds.add(payee.getId());
-            payeeNames.add(payee.getName());
-        }
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, payeeNames);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-    }
-
-    private void initCategorySelector(TextView categoryTextView) {
-        categoryTextView.setOnClickListener(v -> {
-            if (!mIsShareTransactionMode || mLinkedTransaction == null) {
-                return;
-            }
-
-            Intent intent = new Intent(this, CategoryListActivity.class);
-            intent.setAction(Intent.ACTION_PICK);
-            startActivityForResult(intent, RequestCodes.CATEGORY);
-        });
     }
 
     private void loadCategoryName(long categoryId) {
@@ -983,16 +931,6 @@ public class InvestmentTransactionEditActivity
         mViewHolder.dateView.setText(display);
     }
 
-    private void selectId(Spinner spinner, ArrayList<Long> ids, Long id) {
-        if (id == null) return;
-        for (int i = 0; i < ids.size(); i++) {
-            if (id.equals(ids.get(i))) {
-                spinner.setSelection(i);
-                return;
-            }
-        }
-    }
-
     private boolean validate() {
         // symbol must not be empty.
         if (TextUtils.isEmpty(mStock.getSymbol())) {
@@ -1054,35 +992,51 @@ public class InvestmentTransactionEditActivity
         if (links.isEmpty()) return;
 
         ShareInfoRepository shareInfoRepo = new ShareInfoRepository(getApplicationContext());
-        double totalShares = 0.0;
-        double weightedCost = 0.0;
-        double latestPrice = 0.0;
+        PositionTotals totals = new PositionTotals();
 
         for (TransactionLink link : links) {
-            if (link.getCheckingAccountId() == null) continue;
-            ShareInfo si = shareInfoRepo.loadByTransactionId(link.getCheckingAccountId());
-            if (si == null) continue;
-            double shares = si.getShareNumber() != null ? si.getShareNumber() : 0.0;
-            double price = si.getSharePrice() != null ? si.getSharePrice() : 0.0;
-            totalShares += shares;
-            if (shares > 0) {
-                weightedCost += shares * price;
-            }
-            if (price > 0) {
-                latestPrice = price;
-            }
+            accumulateShareInfo(link, shareInfoRepo, totals);
         }
 
         Stock stock = stockRepo.load(stockId);
         if (stock == null) return;
 
-        stock.setNumberOfShares(totalShares);
-        if (totalShares > 0 && weightedCost > 0) {
-            stock.setPurchasePrice(MoneyFactory.fromDouble(weightedCost / totalShares));
+        stock.setNumberOfShares(totals.totalShares);
+        if (totals.totalShares > 0 && totals.weightedCost > 0) {
+            stock.setPurchasePrice(MoneyFactory.fromDouble(totals.weightedCost / totals.totalShares));
         }
-        if (stock.getCurrentPrice().isZero() && latestPrice > 0) {
-            stock.setCurrentPrice(MoneyFactory.fromDouble(latestPrice));
+        if (stock.getCurrentPrice().isZero() && totals.latestPrice > 0) {
+            stock.setCurrentPrice(MoneyFactory.fromDouble(totals.latestPrice));
         }
         stockRepo.save(stock);
+    }
+
+    private void accumulateShareInfo(TransactionLink link, ShareInfoRepository shareInfoRepo,
+                                     PositionTotals totals) {
+        Long transactionId = link.getCheckingAccountId();
+        if (transactionId == null) {
+            return;
+        }
+
+        ShareInfo shareInfo = shareInfoRepo.loadByTransactionId(transactionId);
+        if (shareInfo == null) {
+            return;
+        }
+
+        double shares = shareInfo.getShareNumber() != null ? shareInfo.getShareNumber() : 0.0;
+        double price = shareInfo.getSharePrice() != null ? shareInfo.getSharePrice() : 0.0;
+        totals.totalShares += shares;
+        if (shares > 0) {
+            totals.weightedCost += shares * price;
+        }
+        if (price > 0) {
+            totals.latestPrice = price;
+        }
+    }
+
+    private static final class PositionTotals {
+        private double totalShares;
+        private double weightedCost;
+        private double latestPrice;
     }
 }

@@ -42,6 +42,13 @@ import info.javaperformance.money.MoneyFactory;
 
 public class StockHistoryAdapter extends RecyclerView.Adapter<StockHistoryAdapter.ViewHolder> {
 
+    private final Context context;
+    private final MmxDateTimeUtils dateTimeUtils;
+    private final FormatUtilities formatUtilities;
+    private final OnItemClickListener listener;
+    private final OnItemDeleteListener deleteListener;
+    private List<StockHistory> items = new ArrayList<>();
+
     public interface OnItemClickListener {
         void onItemClick(Date date, Money price);
     }
@@ -49,13 +56,6 @@ public class StockHistoryAdapter extends RecyclerView.Adapter<StockHistoryAdapte
     public interface OnItemDeleteListener {
         void onItemDelete(StockHistory item, int position);
     }
-
-    private final Context context;
-    private final MmxDateTimeUtils dateTimeUtils;
-    private final FormatUtilities formatUtilities;
-    private final OnItemClickListener listener;
-    private final OnItemDeleteListener deleteListener;
-    private List<StockHistory> items = new ArrayList<>();
 
     public StockHistoryAdapter(Context context, OnItemClickListener listener, OnItemDeleteListener deleteListener) {
         this.context = context;

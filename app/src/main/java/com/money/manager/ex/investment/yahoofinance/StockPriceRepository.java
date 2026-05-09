@@ -129,44 +129,20 @@ public class StockPriceRepository {
         yahooService.getChartDataForPeriod(symbol, period1, period2, "1d").enqueue(new Callback<YahooChartResponse>() {
             @Override
             public void onResponse(@NonNull Call<YahooChartResponse> call, @NonNull Response<YahooChartResponse> response) {
-                if (response.body() == null || response.body().chart == null
-                        || response.body().chart.result == null
-                        || response.body().chart.result.isEmpty()) {
-                    liveData.postValue(0);
-                    return;
-                }
-
-                YahooChartResponse.Result result = response.body().chart.result.get(0);
-
-                if (result.timestamps == null || result.indicators == null
-                        || result.indicators.quote == null || result.indicators.quote.isEmpty()
-                        || result.indicators.quote.get(0).closePrices == null) {
+                YahooChartResponse.Result result = getValidHistoryResult(response.body());
+                if (result == null) {
                     liveData.postValue(0);
                     return;
                 }
 
                 try {
-                    List<Long> timestamps = result.timestamps;
-                    List<Double> prices = result.indicators.quote.get(0).closePrices;
-                    int count = 0;
-                    Money latestPrice = null;
-
-                    for (int i = 0; i < timestamps.size(); i++) {
-                        if (i >= prices.size()) break;
-                        Double price = prices.get(i);
-                        if (price == null) continue;
-                        Date date = new MmxDate(timestamps.get(i) * 1000L).toDate();
-                        Money moneyPrice = MoneyFactory.fromDouble(price);
-                        stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
-                        latestPrice = moneyPrice;
-                        count++;
+                    SaveHistoryResult saveResult = saveHistoryPrices(symbol, result.timestamps,
+                            result.indicators.quote.get(0).closePrices);
+                    if (saveResult.latestPrice != null) {
+                        stockRepository.updateCurrentPrice(symbol, saveResult.latestPrice);
                     }
 
-                    if (latestPrice != null) {
-                        stockRepository.updateCurrentPrice(symbol, latestPrice);
-                    }
-
-                    liveData.postValue(count);
+                    liveData.postValue(saveResult.savedCount);
                 } catch (Exception e) {
                     Timber.e(e, "Error storing historical stock prices");
                     liveData.postValue(0);
@@ -181,5 +157,53 @@ public class StockPriceRepository {
         });
 
         return liveData;
+    }
+
+    private YahooChartResponse.Result getValidHistoryResult(YahooChartResponse response) {
+        if (response == null || response.chart == null || response.chart.result == null
+                || response.chart.result.isEmpty()) {
+            return null;
+        }
+
+        YahooChartResponse.Result result = response.chart.result.get(0);
+        if (result.timestamps == null || result.indicators == null
+                || result.indicators.quote == null || result.indicators.quote.isEmpty()
+                || result.indicators.quote.get(0).closePrices == null) {
+            return null;
+        }
+
+        return result;
+    }
+
+    private SaveHistoryResult saveHistoryPrices(String symbol, List<Long> timestamps,
+                                                List<Double> prices) {
+        int savedCount = 0;
+        Money latestPrice = null;
+
+        int size = Math.min(timestamps.size(), prices.size());
+        for (int i = 0; i < size; i++) {
+            Double price = prices.get(i);
+            if (price == null) {
+                continue;
+            }
+
+            Date date = new MmxDate(timestamps.get(i) * 1000L).toDate();
+            Money moneyPrice = MoneyFactory.fromDouble(price);
+            stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
+            latestPrice = moneyPrice;
+            savedCount++;
+        }
+
+        return new SaveHistoryResult(savedCount, latestPrice);
+    }
+
+    private static final class SaveHistoryResult {
+        private final int savedCount;
+        private final Money latestPrice;
+
+        private SaveHistoryResult(int savedCount, Money latestPrice) {
+            this.savedCount = savedCount;
+            this.latestPrice = latestPrice;
+        }
     }
 }

@@ -98,8 +98,6 @@ public class SummaryOfAccountsReportFragment extends Fragment {
     private static final String COL_FROM_AMOUNT_BASE = "FROMAMOUNTBASE";
     private static final String COL_TO_AMOUNT_BASE = "TOAMOUNTBASE";
 
-    private static final String COL_STOCK_PURCHASE_DATE = "PURCHASEDATE";
-    private static final String COL_STOCK_INITIAL_VALUE = "INITIALVALUE";
     private static final String COL_STOCK_SHARE_DATE = "SHAREDATE";
     private static final String COL_STOCK_PRICE_DATE = "PRICEDATE";
     private static final String COL_STOCK_VALUE_DELTA = "VALUEDELTA";

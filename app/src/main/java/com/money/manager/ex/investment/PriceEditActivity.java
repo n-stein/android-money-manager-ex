@@ -248,10 +248,10 @@ public class PriceEditActivity
                     .setMessage(R.string.confirmDelete)
                     .setPositiveButton(android.R.string.ok, (d, w) -> executor.execute(() -> {
                         try {
-                            String isoDate = item.getString(com.money.manager.ex.domainmodel.StockHistory.DATE);
+                            String isoDate = item.getString(StockHistory.DATE);
                             StockHistoryRepository repo = new StockHistoryRepository(PriceEditActivity.this);
                             // check if a DB record exists for that date
-                            com.money.manager.ex.domainmodel.StockHistory dbEntry = repo.getPriceForDate(model.symbol, isoDate);
+                            StockHistory dbEntry = repo.getPriceForDate(model.symbol, isoDate);
                             if (dbEntry != null) {
                                 long deleted = repo.deletePrice(model.symbol, isoDate);
                                 if (deleted > 0) {

@@ -71,6 +71,7 @@ public class HomeAccountsExpandableAdapter
     private HashMap<String, QueryAccountBills> mTotalsByType = new HashMap<>();
     private final boolean mHideReconciled;
     private final CurrencyService mCurrencyService;
+    private final HashMap<Long, InvestmentSummary> mInvestmentSummaries = new HashMap<>();
 
     @Override
     public int getGroupCount() {
@@ -116,28 +117,29 @@ public class HomeAccountsExpandableAdapter
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         String accountType = mAccountTypes.get(groupPosition);
         boolean investmentGroup = AccountTypes.INVESTMENT.toString().equalsIgnoreCase(accountType);
+        View rowView = convertView;
         ViewHolderAccountBills holder;
-        if (convertView == null || investmentGroup != isInvestmentChildView(convertView)) {
+        if (rowView == null || investmentGroup != isInvestmentChildView(rowView)) {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             holder = new ViewHolderAccountBills();
             if (investmentGroup) {
-                convertView = inflater.inflate(R.layout.item_account_bills_investment, null);
-                holder.txtAccountName = convertView.findViewById(R.id.textViewItemAccountName);
+                rowView = inflater.inflate(R.layout.item_account_bills_investment, null);
+                holder.txtAccountName = rowView.findViewById(R.id.textViewItemAccountName);
                 holder.txtAccountName.setTypeface(null, Typeface.BOLD);
-                holder.imgAccountType = convertView.findViewById(R.id.imageViewAccountType);
-                holder.txtCashBalance = convertView.findViewById(R.id.textViewCashBalance);
-                holder.txtReconciled = convertView.findViewById(R.id.textViewReconciled);
-                holder.txtMarketValue = convertView.findViewById(R.id.textViewMarketValue);
-                holder.txtInvested = convertView.findViewById(R.id.textViewInvested);
-                holder.txtGainLoss = convertView.findViewById(R.id.textViewGainLoss);
+                holder.imgAccountType = rowView.findViewById(R.id.imageViewAccountType);
+                holder.txtCashBalance = rowView.findViewById(R.id.textViewCashBalance);
+                holder.txtReconciled = rowView.findViewById(R.id.textViewReconciled);
+                holder.txtMarketValue = rowView.findViewById(R.id.textViewMarketValue);
+                holder.txtInvested = rowView.findViewById(R.id.textViewInvested);
+                holder.txtGainLoss = rowView.findViewById(R.id.textViewGainLoss);
             } else {
-                convertView = inflater.inflate(R.layout.item_account_bills, null);
-                holder.txtAccountName = convertView.findViewById(R.id.textViewItemAccountName);
+                rowView = inflater.inflate(R.layout.item_account_bills, null);
+                holder.txtAccountName = rowView.findViewById(R.id.textViewItemAccountName);
                 holder.txtAccountName.setTypeface(null, Typeface.BOLD);
-                holder.imgAccountType = convertView.findViewById(R.id.imageViewAccountType);
-                holder.txtAccountTotal = convertView.findViewById(R.id.textViewItemAccountTotal);
+                holder.imgAccountType = rowView.findViewById(R.id.imageViewAccountType);
+                holder.txtAccountTotal = rowView.findViewById(R.id.textViewItemAccountTotal);
                 holder.txtAccountTotal.setTypeface(null, Typeface.BOLD);
-                holder.txtAccountReconciled = convertView.findViewById(R.id.textViewItemAccountTotalReconciled);
+                holder.txtAccountReconciled = rowView.findViewById(R.id.textViewItemAccountTotalReconciled);
                 if (mHideReconciled) {
                     holder.txtAccountReconciled.setVisibility(View.GONE);
                 } else {
@@ -145,9 +147,9 @@ public class HomeAccountsExpandableAdapter
                 }
             }
             holder.isInvestmentLayout = investmentGroup;
-            convertView.setTag(holder);
+            rowView.setTag(holder);
         }
-        holder = (ViewHolderAccountBills) convertView.getTag();
+        holder = (ViewHolderAccountBills) rowView.getTag();
 
         UIHelper uiHelper = new UIHelper(getContext());
         int iconSize = 30;
@@ -217,7 +219,7 @@ public class HomeAccountsExpandableAdapter
             }
         }
 
-        return convertView;
+        return rowView;
     }
 
     private InvestmentSummary getInvestmentGroupSummary(String accountType) {
@@ -284,38 +286,39 @@ public class HomeAccountsExpandableAdapter
                              View convertView, ViewGroup parent) {
         String accountType = mAccountTypes.get(groupPosition);
         boolean investmentAccount = AccountTypes.INVESTMENT.toString().equalsIgnoreCase(accountType);
+        View rowView = convertView;
         ViewHolderAccountBills holder;
-        if (convertView == null || investmentAccount != isInvestmentChildView(convertView)) {
+        if (rowView == null || investmentAccount != isInvestmentChildView(rowView)) {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(
+            rowView = inflater.inflate(
                     investmentAccount ? R.layout.item_account_bills_investment : R.layout.item_account_bills,
                     null);
 
             holder = new ViewHolderAccountBills();
-            holder.txtAccountName = convertView.findViewById(R.id.textViewItemAccountName);
+            holder.txtAccountName = rowView.findViewById(R.id.textViewItemAccountName);
             holder.txtAccountName.setTypeface(null, Typeface.NORMAL);
 
             if (investmentAccount) {
-                holder.imgAccountType = convertView.findViewById(R.id.imageViewAccountType);
+                holder.imgAccountType = rowView.findViewById(R.id.imageViewAccountType);
                 holder.imgAccountType.setVisibility(View.INVISIBLE);
-                holder.txtCashBalance = convertView.findViewById(R.id.textViewCashBalance);
-                holder.txtReconciled = convertView.findViewById(R.id.textViewReconciled);
-                holder.txtMarketValue = convertView.findViewById(R.id.textViewMarketValue);
-                holder.txtInvested = convertView.findViewById(R.id.textViewInvested);
-                holder.txtGainLoss = convertView.findViewById(R.id.textViewGainLoss);
+                holder.txtCashBalance = rowView.findViewById(R.id.textViewCashBalance);
+                holder.txtReconciled = rowView.findViewById(R.id.textViewReconciled);
+                holder.txtMarketValue = rowView.findViewById(R.id.textViewMarketValue);
+                holder.txtInvested = rowView.findViewById(R.id.textViewInvested);
+                holder.txtGainLoss = rowView.findViewById(R.id.textViewGainLoss);
             } else {
-                holder.imgAccountType = convertView.findViewById(R.id.imageViewAccountType);
-                holder.txtAccountTotal = convertView.findViewById(R.id.textViewItemAccountTotal);
-                holder.txtAccountReconciled = convertView.findViewById(R.id.textViewItemAccountTotalReconciled);
+                holder.imgAccountType = rowView.findViewById(R.id.imageViewAccountType);
+                holder.txtAccountTotal = rowView.findViewById(R.id.textViewItemAccountTotal);
+                holder.txtAccountReconciled = rowView.findViewById(R.id.textViewItemAccountTotalReconciled);
                 holder.txtAccountTotal.setTypeface(null, Typeface.NORMAL);
                 holder.imgAccountType.setVisibility(View.INVISIBLE);
             }
 
             holder.isInvestmentLayout = investmentAccount;
 
-            convertView.setTag(holder);
+            rowView.setTag(holder);
         }
-        holder = (ViewHolderAccountBills) convertView.getTag();
+        holder = (ViewHolderAccountBills) rowView.getTag();
 
         QueryAccountBills account = getAccountData(groupPosition, childPosition);
 
@@ -369,7 +372,7 @@ public class HomeAccountsExpandableAdapter
             }
         }
 
-        return convertView;
+        return rowView;
     }
 
     @Override
@@ -392,8 +395,6 @@ public class HomeAccountsExpandableAdapter
         Object tag = convertView.getTag();
         return tag instanceof ViewHolderAccountBills && ((ViewHolderAccountBills) tag).isInvestmentLayout;
     }
-
-    private final HashMap<Long, InvestmentSummary> mInvestmentSummaries = new HashMap<>();
 
     private class ViewHolderAccountBills {
         TextView txtAccountName;
