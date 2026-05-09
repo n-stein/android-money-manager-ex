@@ -648,7 +648,6 @@
     <string name="budget_year">Год бюджета</string>
     <string name="budget_month">Месяц бюджета</string>
     <string name="budget_month_optional">Месяц бюджета (необязательно)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Для принятия изменений программу необходимо перезапустить.</string>
     <string name="print">Печать</string>
     <string name="min_19">Вам нужно по крайней мере Android 4.4, чтобы иметь возможность распечатать документ.</string>

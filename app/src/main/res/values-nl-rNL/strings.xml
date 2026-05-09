@@ -648,7 +648,6 @@
     <string name="budget_year">Budgetjaar</string>
     <string name="budget_month">Budgetmaand</string>
     <string name="budget_month_optional">Begroting maand (optioneel)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Het programma zal nu afsluiten om de wijzigingen door te voeren. Start programma opnieuw.</string>
     <string name="print">Afdrukken</string>
     <string name="min_19">U heeft minstens Android 4.4 nodig om dit document te kunnen printen.</string>
