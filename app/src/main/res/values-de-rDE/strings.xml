@@ -648,7 +648,6 @@
     <string name="budget_year">Jahresbudget</string>
     <string name="budget_month">Monatsbudget</string>
     <string name="budget_month_optional">Budget Monat (optional)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Die App wird sich nun schließen, um die Änderungen wirksam zu machen. Bitte starten Sie neu.</string>
     <string name="print">Drucken</string>
     <string name="min_19">Sie benötigen mindestens Android 4.4 um das Dokument zu drucken.</string>

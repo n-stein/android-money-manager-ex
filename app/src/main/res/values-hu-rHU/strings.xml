@@ -642,7 +642,6 @@
     <string name="budget_year">Költségvetés év</string>
     <string name="budget_month">Költségvetés hónap</string>
     <string name="budget_month_optional">Költségvetési hónap (nem kötelező)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Az alkalmazás most bezárul a módosítások alkalmazásához. Kérjük, indítsa újra.</string>
     <string name="print">Nyomtatás</string>
     <string name="min_19">A dokumentum kinyomtatásához legalább Android 4.4-es verzióra van szüksége.</string>

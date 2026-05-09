@@ -601,7 +601,6 @@
     <string name="budget_name">Bütçe Adı</string>
     <string name="budget_year">Bütçe Yılı</string>
     <string name="budget_month">Bütçe Ay</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Değişiklikleri uygulamak için uygulama kapanacak. Lütfen yeniden başlatın.</string>
     <string name="print">Yazdır</string>
     <string name="min_19">Belgeyi yazdırmak için en az Android 4.4 sürümüne ihtiyacınız var.</string>

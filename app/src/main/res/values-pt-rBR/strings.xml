@@ -642,7 +642,6 @@
     <string name="budget_year">Orçamento Anual</string>
     <string name="budget_month">Orçamento mensal</string>
     <string name="budget_month_optional">Orçamento do Mês (opcional)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">O aplicativo será fechado para aplicar todas as alterações. Por favor reinicie.</string>
     <string name="print">Imprimir</string>
     <string name="min_19">Você precisa ter pelo menos a versão 4.4 do Android para imprimir o documento.</string>

@@ -642,7 +642,6 @@
     <string name="budget_year">பட்ஜெட் ஆண்டு</string>
     <string name="budget_month">பட்ஜெட் மாதம்</string>
     <string name="budget_month_optional">பட்ஜெட் மாதம் (கட்டாயமற்ற)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">மாற்றங்களைப் பயன்படுத்த, பயன்பாடு இப்போது மூடப்படும். தயவுசெய்து மீண்டும் தொடங்கவும்.</string>
     <string name="print">அச்சிடுக</string>
     <string name="min_19">ஆவணத்தை அச்சிடுவதற்கு உங்களுக்கு குறைந்தபட்சம் Android 4.4 தேவை.</string>
