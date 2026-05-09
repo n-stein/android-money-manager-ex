@@ -355,23 +355,6 @@
                         android:clickable="false" />
                 </LinearLayout>
 
-                <!-- Notes -->
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
-
-                    <com.money.manager.ex.view.RobotoEditText
-                        android:id="@+id/notesEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="@dimen/mmx_padding"
-                        android:gravity="top|start"
-                        android:hint="@string/notes"
-                        android:inputType="textMultiLine"
-                        android:scrollHorizontally="false"
-                        android:textCursorDrawable="@null" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <!-- Current Price (hidden in share transaction mode) -->
                 <LinearLayout
                     android:id="@+id/currentPriceSection"
@@ -417,6 +400,23 @@
                         android:gravity="end"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <!-- Notes -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.money.manager.ex.view.RobotoEditText
+                        android:id="@+id/notesEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="@dimen/mmx_padding"
+                        android:gravity="top|start"
+                        android:hint="@string/notes"
+                        android:inputType="textMultiLine"
+                        android:scrollHorizontally="false"
+                        android:textCursorDrawable="@null" />
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
