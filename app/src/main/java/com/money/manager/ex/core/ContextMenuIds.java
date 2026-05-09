@@ -36,7 +36,6 @@ public enum ContextMenuIds {
     CASH_LEDGER(13),
     WATCHLIST(14),
     SWITCH_ACTIVE(12),
-    ADJUST_TRADE(15),
     OPEN_YAHOO_FINANCE(16);
 
     public static ContextMenuIds get(int id) {

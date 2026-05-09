@@ -17,7 +17,9 @@
 
 package com.money.manager.ex.investment;
 
+import android.app.Activity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -31,24 +33,27 @@ import com.shamanland.fonticon.FontIconView;
  * View Holder for Investment transaction editing.
  */
 public class InvestmentTransactionViewHolder {
-    public InvestmentTransactionViewHolder(View view) {
-        accountSpinner = view.findViewById(R.id.spinnerAccount);
-        transactionTypeSpinner = view.findViewById(R.id.spinnerTransactionType);
-        statusSpinner = view.findViewById(R.id.spinnerStatus);
-        textViewPayee = view.findViewById(R.id.textViewPayee);
-        categoryTextView = view.findViewById(R.id.textViewCategory);
-        transferCheckBox = view.findViewById(R.id.checkBoxTransfer);
-        dateView = view.findViewById(R.id.textViewDate);
-        numSharesView = view.findViewById(R.id.numSharesView);
-        stockNameEdit = view.findViewById(R.id.stockNameEdit);
-        symbolEdit = view.findViewById(R.id.symbolEdit);
-        notesEdit = view.findViewById(R.id.notesEdit);
-        previousDayButton = view.findViewById(R.id.previousDayButton);
-        nextDayButton = view.findViewById(R.id.nextDayButton);
-        purchasePriceView = view.findViewById(R.id.purchasePriceView);
-        totalPriceView = view.findViewById(R.id.totalPriceView);
-        commissionView = view.findViewById(R.id.commissionView);
-        currentPriceView = view.findViewById(R.id.currentPriceView);
+    public InvestmentTransactionViewHolder(Activity activity) {
+        accountSpinner = activity.findViewById(R.id.spinnerAccount);
+        transactionTypeSpinner = activity.findViewById(R.id.spinnerTransactionType);
+        statusSpinner = activity.findViewById(R.id.spinnerStatus);
+        textViewPayee = activity.findViewById(R.id.textViewPayee);
+        categoryTextView = activity.findViewById(R.id.textViewCategory);
+        transferCheckBox = activity.findViewById(R.id.checkBoxTransfer);
+        dateView = activity.findViewById(R.id.textViewDate);
+        numSharesView = activity.findViewById(R.id.numSharesView);
+        stockNameEdit = activity.findViewById(R.id.stockNameEdit);
+        symbolEdit = activity.findViewById(R.id.symbolEdit);
+        notesEdit = activity.findViewById(R.id.notesEdit);
+        previousDayButton = activity.findViewById(R.id.previousDayButton);
+        nextDayButton = activity.findViewById(R.id.nextDayButton);
+        purchasePriceView = activity.findViewById(R.id.purchasePriceView);
+        totalPriceView = activity.findViewById(R.id.totalPriceView);
+        commissionView = activity.findViewById(R.id.commissionView);
+        currentPriceView = activity.findViewById(R.id.currentPriceView);
+        valueView = activity.findViewById(R.id.valueView);
+        buyButton = activity.findViewById(R.id.buyButton);
+        sellButton = activity.findViewById(R.id.sellButton);
     }
 
     public Spinner accountSpinner;
@@ -68,4 +73,7 @@ public class InvestmentTransactionViewHolder {
     public RobotoTextView totalPriceView;
     public RobotoTextView commissionView;
     public RobotoTextView currentPriceView;
+    public RobotoTextView valueView;
+    public Button buyButton;
+    public Button sellButton;
 }

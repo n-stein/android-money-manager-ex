@@ -202,7 +202,6 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         MenuHelper menuHelper = new MenuHelper(requireActivity(), menu);
         menu.add(Menu.NONE, ContextMenuIds.VIEW_TRANSACTIONS.getId(), Menu.NONE, R.string.view_transactions);
         menu.add(Menu.NONE, ContextMenuIds.OPEN_YAHOO_FINANCE.getId(), Menu.NONE, R.string.open_yahoo_finance);
-        menuHelper.addToContextMenu(ContextMenuIds.ADJUST_TRADE);
         menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
         menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
         menuHelper.addToContextMenu(ContextMenuIds.DELETE);
@@ -214,10 +213,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
 
         ContextMenuIds menuId = ContextMenuIds.get(item.getItemId());
 
-        if (Objects.requireNonNull(menuId) == ContextMenuIds.ADJUST_TRADE) {
-            openShareTransactionForStock(selectedStock, TransactionTypes.Withdrawal);
-            return true;
-        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.VIEW_TRANSACTIONS) {
+        if (Objects.requireNonNull(menuId) == ContextMenuIds.VIEW_TRANSACTIONS) {
             openStockTransactions(selectedStock);
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DELETE) {

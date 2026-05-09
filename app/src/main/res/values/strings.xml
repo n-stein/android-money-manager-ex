@@ -167,7 +167,6 @@
     <string name="deposit">Deposit</string>
     <string name="buy">Buy</string>
     <string name="sell">Sell</string>
-    <string name="adjust_trade">Adjust Trade</string>
     <string name="status">Status</string>
     <string name="status_reconciled">Reconciled</string>
     <string name="status_void">Void</string>

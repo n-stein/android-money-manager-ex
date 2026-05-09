@@ -452,8 +452,7 @@ public class InvestmentTransactionEditActivity
     }
 
     private void initializeForm() {
-        View rootView = this.findViewById(R.id.content);
-        mViewHolder = new InvestmentTransactionViewHolder(rootView);
+        mViewHolder = new InvestmentTransactionViewHolder(this);
 
         initDateControl(mViewHolder);
         initAccountSelectors(mViewHolder);
@@ -485,6 +484,14 @@ public class InvestmentTransactionEditActivity
             onCurrentPriceClick();
         });
 
+        mViewHolder.buyButton.setOnClickListener(view -> {
+            openShareTransaction(TransactionTypes.Withdrawal);
+        });
+
+        mViewHolder.sellButton.setOnClickListener(view -> {
+            openShareTransaction(TransactionTypes.Deposit);
+        });
+
         if (mViewHolder.transferCheckBox != null) {
             mViewHolder.transferCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -493,6 +500,10 @@ public class InvestmentTransactionEditActivity
                 }
             });
         }
+
+        // Hide buttons by default (only show in stock overview mode)
+        mViewHolder.buyButton.setVisibility(View.GONE);
+        mViewHolder.sellButton.setVisibility(View.GONE);
 
         if (mIsStockOverviewMode) {
             applyStockOverviewMode();
@@ -503,6 +514,10 @@ public class InvestmentTransactionEditActivity
         mViewHolder.dateView.setClickable(true);
         mViewHolder.previousDayButton.setVisibility(View.VISIBLE);
         mViewHolder.nextDayButton.setVisibility(View.VISIBLE);
+
+        // Show Buy/Sell buttons in stock overview mode
+        mViewHolder.buyButton.setVisibility(View.VISIBLE);
+        mViewHolder.sellButton.setVisibility(View.VISIBLE);
 
         // Account spinner: read-only
         mViewHolder.accountSpinner.setEnabled(false);
@@ -1009,6 +1024,19 @@ public class InvestmentTransactionEditActivity
             payeeRepo.add(payee);
         }
         tx.setPayeeId(payee.getId());
+    }
+
+    /**
+     * Opens a new share transaction for the current stock with the specified transaction type.
+     */
+    private void openShareTransaction(TransactionTypes transactionType) {
+        Intent intent = new Intent(this, InvestmentTransactionEditActivity.class);
+        intent.putExtra(ARG_ACCOUNT_ID, mStock.getHeldAt());
+        intent.putExtra(ARG_STOCK_ID, mStock.getId());
+        intent.putExtra(ARG_NEW_SHARE_TRANSACTION, true);
+        intent.putExtra(ARG_INITIAL_TRANSACTION_TYPE, transactionType.name());
+        intent.setAction(Intent.ACTION_INSERT);
+        startActivity(intent);
     }
 
     /**
