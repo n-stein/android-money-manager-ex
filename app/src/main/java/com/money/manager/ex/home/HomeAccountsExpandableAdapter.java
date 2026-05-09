@@ -53,6 +53,12 @@ public class HomeAccountsExpandableAdapter
     extends BaseExpandableListAdapter {
 
     private final Context mContext;
+    private List<String> mAccountTypes = new ArrayList<>();
+    private HashMap<String, List<QueryAccountBills>> mAccountsByType = new HashMap<>();
+    private HashMap<String, QueryAccountBills> mTotalsByType = new HashMap<>();
+    private final boolean mHideReconciled;
+    private final CurrencyService mCurrencyService;
+    private final HashMap<Long, InvestmentSummary> mInvestmentSummaries = new HashMap<>();
 
     public HomeAccountsExpandableAdapter(Context context, List<String> accountTypes,
                                          HashMap<String, List<QueryAccountBills>> accountsByType,
@@ -65,13 +71,6 @@ public class HomeAccountsExpandableAdapter
         mHideReconciled = hideReconciled;
         mCurrencyService = new CurrencyService(mContext);
     }
-
-    private List<String> mAccountTypes = new ArrayList<>();
-    private HashMap<String, List<QueryAccountBills>> mAccountsByType = new HashMap<>();
-    private HashMap<String, QueryAccountBills> mTotalsByType = new HashMap<>();
-    private final boolean mHideReconciled;
-    private final CurrencyService mCurrencyService;
-    private final HashMap<Long, InvestmentSummary> mInvestmentSummaries = new HashMap<>();
 
     @Override
     public int getGroupCount() {
