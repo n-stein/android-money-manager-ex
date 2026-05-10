@@ -34,9 +34,12 @@ import com.money.manager.ex.currency.CurrencyService;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.Stock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import info.javaperformance.money.Money;
+import info.javaperformance.money.MoneyFactory;
 
 public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapter.ViewHolder> {
     private final LayoutInflater inflater;
@@ -44,6 +47,7 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
     private OnItemLongClickListener longClickListener;
     private Account mAccount;
     private final CurrencyService mCurrencyService;
+    private final Map<Long, RealizedGainLoss> mRealizedGainLossByStockId = new HashMap<>();
 
     public interface OnItemClickListener {
         void onItemClick(long stockId);
@@ -82,6 +86,11 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
         this.longClickListener = listener;
     }
 
+    public void setRealizedGainLossByStockId(@NonNull Map<Long, RealizedGainLoss> gainLossByStockId) {
+        mRealizedGainLossByStockId.clear();
+        mRealizedGainLossByStockId.putAll(gainLossByStockId);
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -113,6 +122,15 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
         holder.unrealizedGLAmountTextView.setText(mAccount == null ? "<unknown>" : mCurrencyService.getCurrencyFormatted(mAccount.getCurrencyId(), unrealizedAmount));
         holder.unrealizedGLPercentTextView.setText(String.format("%.2f%%", unrealizedPercent));
 
+        // Column 5: Realized G/L
+        RealizedGainLoss realizedGainLoss = mRealizedGainLossByStockId.get(stock.getId());
+        Money realizedAmount = realizedGainLoss != null ? realizedGainLoss.amount : MoneyFactory.fromDouble(0);
+        double realizedPercent = realizedGainLoss != null ? realizedGainLoss.percent : 0.0;
+        holder.realizedGLAmountTextView.setText(mAccount == null
+            ? "<unknown>"
+            : mCurrencyService.getCurrencyFormatted(mAccount.getCurrencyId(), realizedAmount));
+        holder.realizedGLPercentTextView.setText(String.format("%.2f%%", realizedPercent));
+
         // Zebra striping
         int bgColor = (position % 2 == 0) ? android.R.color.darker_gray : android.R.color.white;
         int fgColor = (position % 2 == 0) ? android.R.color.white : android.R.color.black;
@@ -126,6 +144,16 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
         }
         holder.unrealizedGLAmountTextView.setTextColor(gainLossColor);
         holder.unrealizedGLPercentTextView.setTextColor(gainLossColor);
+
+        int realizedGainLossColor = ContextCompat.getColor(holder.itemView.getContext(), fgColor);
+        if (realizedAmount.toDouble() < 0) {
+            realizedGainLossColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.red);
+        } else if (realizedAmount.toDouble() > 0) {
+            realizedGainLossColor = ContextCompat.getColor(holder.itemView.getContext(), R.color.green);
+        }
+        holder.realizedGLAmountTextView.setTextColor(realizedGainLossColor);
+        holder.realizedGLPercentTextView.setTextColor(realizedGainLossColor);
+
         holder.marketValueTextView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), fgColor));
         holder.sharesTextView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), fgColor));
         holder.nameTextView.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), fgColor));
@@ -160,6 +188,9 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
         // Column 4
         TextView unrealizedGLAmountTextView;
         TextView unrealizedGLPercentTextView;
+        // Column 5
+        TextView realizedGLAmountTextView;
+        TextView realizedGLPercentTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -175,6 +206,9 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
             // Column 4
             unrealizedGLAmountTextView = itemView.findViewById(R.id.unrealizedGLAmountTextView);
             unrealizedGLPercentTextView = itemView.findViewById(R.id.unrealizedGLPercentTextView);
+            // Column 5
+            realizedGLAmountTextView = itemView.findViewById(R.id.realizedGLAmountTextView);
+            realizedGLPercentTextView = itemView.findViewById(R.id.realizedGLPercentTextView);
 
             itemView.setOnClickListener(v -> {
                 int position = getBindingAdapterPosition();
@@ -192,6 +226,16 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
                 }
                 return false;
             });
+        }
+    }
+
+    public static final class RealizedGainLoss {
+        public final Money amount;
+        public final double percent;
+
+        public RealizedGainLoss(@NonNull Money amount, double percent) {
+            this.amount = amount;
+            this.percent = percent;
         }
     }
 }

@@ -128,4 +128,30 @@
                             android:textSize="12sp"
                             android:paddingVertical="2dp"/>
                 </LinearLayout>
+
+                <!-- Column 5: Realized G/L | % -->
+                <LinearLayout
+                    android:layout_width="120dp"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="end"
+                    android:paddingHorizontal="8dp">
+
+                        <com.money.manager.ex.view.RobotoTextView
+                            android:id="@+id/realizedGLAmountTextView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="end"
+                            android:textSize="14sp"
+                            android:paddingVertical="2dp"/>
+
+                        <com.money.manager.ex.view.RobotoTextView
+                            android:id="@+id/realizedGLPercentTextView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:gravity="end"
+                            android:textSize="12sp"
+                            android:paddingVertical="2dp"/>
+                </LinearLayout>
         </LinearLayout>
