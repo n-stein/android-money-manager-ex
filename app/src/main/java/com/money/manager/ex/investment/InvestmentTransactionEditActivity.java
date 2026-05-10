@@ -66,9 +66,12 @@ import com.money.manager.ex.utils.MmxDateTimeUtils;
 import com.money.manager.ex.view.RobotoTextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import com.squareup.sqlbrite3.BriteDatabase;
@@ -201,6 +204,33 @@ public class InvestmentTransactionEditActivity
         }
 
         initializeForm();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // Returning from Buy/Sell child activity should refresh overview figures
+        // (shares, prices, value) from persisted STOCK_V1 data.
+        if (!mIsStockOverviewMode || mStock == null || mStock.getId() == null || mViewHolder == null) {
+            return;
+        }
+
+        Stock latest = new StockRepository(this).load(mStock.getId());
+        if (latest == null) {
+            return;
+        }
+
+        mStock = latest;
+
+        if (mAccount != null && mStock.getHeldAt() != mAccount.getId()) {
+            Account account = new AccountRepository(this).load(mStock.getHeldAt());
+            if (account != null) {
+                mAccount = account;
+            }
+        }
+
+        displayStock(mStock, mViewHolder);
     }
 
     @Override
@@ -648,15 +678,48 @@ public class InvestmentTransactionEditActivity
 
     private void showTotalPrice() {
         if (mViewHolder == null || mViewHolder.totalPriceView == null) return;
-        Money total = mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
-                .add(mStock.getCommission());
+        Money total = getShareTransactionAmount();
         mViewHolder.totalPriceView.setText(total.toString());
+    }
+
+    private TransactionTypes getSelectedShareTransactionType() {
+        if (!mIsShareTransactionMode || mViewHolder == null || mViewHolder.transactionTypeSpinner == null
+                || mTransactionTypes.isEmpty()) {
+            return TransactionTypes.Withdrawal;
+        }
+
+        int pos = mViewHolder.transactionTypeSpinner.getSelectedItemPosition();
+        if (pos < 0 || pos >= mTransactionTypes.size()) {
+            return TransactionTypes.Withdrawal;
+        }
+        return mTransactionTypes.get(pos);
+    }
+
+    private Money getShareTransactionAmount() {
+        Money gross = mStock.getPurchasePrice().multiply(mStock.getNumberOfShares());
+        Money commission = mStock.getCommission();
+
+        // Match desktop formula (TrxShareDialog::get_amount):
+        // Buy  (Withdrawal): shares*price + commission
+        // Sell (Deposit):    shares*price - commission
+        if (getSelectedShareTransactionType() == TransactionTypes.Deposit) {
+            return gross.subtract(commission);
+        }
+
+        return gross.add(commission);
     }
 
     private void showValue() {
         RobotoTextView view = this.findViewById(R.id.valueView);
-        //mViewHolder.
-        view.setText(mStock.getValue().toString());
+        Money valueToDisplay;
+        if (mIsStockOverviewMode) {
+            // Desktop-like summary view: display market value.
+            valueToDisplay = mStock.getCurrentPrice().multiply(mStock.getNumberOfShares());
+        } else {
+            // Other contexts use stored cost basis (STOCK_V1.VALUE).
+            valueToDisplay = mStock.getValue();
+        }
+        view.setText(valueToDisplay.toString());
     }
 
     private boolean save() {
@@ -679,8 +742,7 @@ public class InvestmentTransactionEditActivity
                 }
             }
             // Sync amount then persist the accounting transaction.
-            mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
-                    .add(mStock.getCommission()));
+                mLinkedTransaction.setAmount(getShareTransactionAmount());
             ensureTransactionPayee(mLinkedTransaction);
             txRepo.update(mLinkedTransaction);
             // Persist per-transaction share data.
@@ -717,8 +779,7 @@ public class InvestmentTransactionEditActivity
 
             if (mLinkedTransaction != null) {
                 mLinkedTransaction.setAccountId(mStock.getHeldAt());
-                mLinkedTransaction.setAmount(mStock.getPurchasePrice().multiply(mStock.getNumberOfShares())
-                        .add(mStock.getCommission()));
+                mLinkedTransaction.setAmount(getShareTransactionAmount());
                 ensureTransactionPayee(mLinkedTransaction);
                 txRepo.insert(mLinkedTransaction);
 
@@ -840,6 +901,18 @@ public class InvestmentTransactionEditActivity
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (mIsShareTransactionMode) {
+                    showTotalPrice();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
     }
 
     private void initStatusSelector(Spinner spinner) {
@@ -995,52 +1068,113 @@ public class InvestmentTransactionEditActivity
         );
         if (links.isEmpty()) return;
 
+        AccountTransactionRepository transactionRepo = new AccountTransactionRepository(getApplicationContext());
         ShareInfoRepository shareInfoRepo = new ShareInfoRepository(getApplicationContext());
         PositionTotals totals = new PositionTotals();
+        Set<Long> processedTransactionIds = new HashSet<>();
 
         for (TransactionLink link : links) {
-            accumulateShareInfo(link, shareInfoRepo, totals);
+            Long transactionId = link.getCheckingAccountId();
+            if (transactionId == null || !processedTransactionIds.add(transactionId)) {
+                continue;
+            }
+
+            ShareInfo shareInfo = shareInfoRepo.loadByTransactionId(transactionId);
+            if (shareInfo == null) {
+                continue;
+            }
+
+            AccountTransaction transaction = transactionRepo.first(
+                    transactionRepo.getAllColumns(),
+                    AccountTransaction.TRANSID + "=?",
+                    new String[] { String.valueOf(transactionId) },
+                    null
+            );
+            PositionEntry entry = new PositionEntry();
+            entry.transactionId = transactionId;
+            entry.date = transaction == null ? null : transaction.getDate();
+            entry.shares = shareInfo.getShareNumber() != null ? shareInfo.getShareNumber() : 0.0;
+            entry.price = shareInfo.getSharePrice() != null ? shareInfo.getSharePrice() : 0.0;
+            entry.commission = shareInfo.getShareCommission() != null ? shareInfo.getShareCommission() : 0.0;
+
+            totals.entries.add(entry);
+        }
+
+        Collections.sort(totals.entries, (left, right) -> {
+            Date leftDate = left.date;
+            Date rightDate = right.date;
+
+            if (leftDate == null && rightDate != null) return -1;
+            if (leftDate != null && rightDate == null) return 1;
+            if (leftDate != null && rightDate != null) {
+                int byDate = leftDate.compareTo(rightDate);
+                if (byDate != 0) return byDate;
+            }
+
+            return Long.compare(left.transactionId, right.transactionId);
+        });
+
+        for (PositionEntry entry : totals.entries) {
+            totals.totalShares += entry.shares;
+            if (totals.totalShares < 0) {
+                totals.totalShares = 0;
+            }
+
+            if (entry.shares > 0) {
+                totals.totalInitialValue += entry.shares * entry.price + entry.commission;
+            } else {
+                totals.totalInitialValue += entry.shares * totals.averageSharePrice;
+            }
+
+            if (totals.totalInitialValue < 0) {
+                totals.totalInitialValue = 0;
+            }
+            if (totals.totalShares > 0) {
+                totals.averageSharePrice = totals.totalInitialValue / totals.totalShares;
+            }
+
+            totals.totalCommission += entry.commission;
+            if (entry.price > 0) {
+                totals.latestPrice = entry.price;
+            }
+            if (entry.date != null && (totals.minTradeDate == null || entry.date.before(totals.minTradeDate))) {
+                totals.minTradeDate = entry.date;
+            }
         }
 
         Stock stock = stockRepo.load(stockId);
         if (stock == null) return;
 
         stock.setNumberOfShares(totals.totalShares);
-        if (totals.totalShares > 0 && totals.weightedCost > 0) {
-            stock.setPurchasePrice(MoneyFactory.fromDouble(totals.weightedCost / totals.totalShares));
+        if (totals.minTradeDate != null) {
+            stock.setPurchaseDate(totals.minTradeDate);
         }
+        if (totals.totalShares > 0 && totals.averageSharePrice > 0) {
+            stock.setPurchasePrice(MoneyFactory.fromDouble(totals.averageSharePrice));
+        }
+        stock.setValue(MoneyFactory.fromDouble(totals.totalInitialValue));
+        stock.setCommission(MoneyFactory.fromDouble(totals.totalCommission));
         if (stock.getCurrentPrice().isZero() && totals.latestPrice > 0) {
             stock.setCurrentPrice(MoneyFactory.fromDouble(totals.latestPrice));
         }
         stockRepo.save(stock);
     }
 
-    private void accumulateShareInfo(TransactionLink link, ShareInfoRepository shareInfoRepo,
-                                     PositionTotals totals) {
-        Long transactionId = link.getCheckingAccountId();
-        if (transactionId == null) {
-            return;
-        }
-
-        ShareInfo shareInfo = shareInfoRepo.loadByTransactionId(transactionId);
-        if (shareInfo == null) {
-            return;
-        }
-
-        double shares = shareInfo.getShareNumber() != null ? shareInfo.getShareNumber() : 0.0;
-        double price = shareInfo.getSharePrice() != null ? shareInfo.getSharePrice() : 0.0;
-        totals.totalShares += shares;
-        if (shares > 0) {
-            totals.weightedCost += shares * price;
-        }
-        if (price > 0) {
-            totals.latestPrice = price;
-        }
+    private static final class PositionEntry {
+        private long transactionId;
+        private Date date;
+        private double shares;
+        private double price;
+        private double commission;
     }
 
     private static final class PositionTotals {
+        private final List<PositionEntry> entries = new ArrayList<>();
         private double totalShares;
-        private double weightedCost;
+        private double totalInitialValue;
+        private double averageSharePrice;
+        private double totalCommission;
         private double latestPrice;
+        private Date minTradeDate;
     }
 }

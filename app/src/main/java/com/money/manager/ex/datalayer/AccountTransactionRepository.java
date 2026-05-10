@@ -81,6 +81,9 @@ public class AccountTransactionRepository
     @Override
     public AccountTransaction load(Long id) {
         AccountTransaction txn = super.load(id);
+        if (txn == null) {
+            return null;
+        }
 
         txn.setAttachments(loadAttachments(id));
         /// TODO other associated items

@@ -252,7 +252,8 @@ public class HomeAccountsExpandableAdapter
         List<Stock> stocks = stockRepository.loadByAccount(account.getAccountId());
         for (Stock stock : stocks) {
             marketValue = marketValue.add(stock.getCurrentPrice().multiply(stock.getNumberOfShares()));
-            invested = invested.add(stock.getPurchasePrice().multiply(stock.getNumberOfShares()));
+            // invested uses cost basis (VALUE field) which includes commission
+            invested = invested.add(stock.getValue());
         }
 
         summary.totalBase = MoneyFactory.fromDouble(account.getTotalBaseConvRate());

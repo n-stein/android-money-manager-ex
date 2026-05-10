@@ -836,7 +836,8 @@ public class AccountTransactionListFragment
             Money invested = MoneyFactory.fromDouble(0);
             for (Stock s : stocks) {
                 marketValue = marketValue.add(s.getCurrentPrice().multiply(s.getNumberOfShares()));
-                invested = invested.add(s.getPurchasePrice().multiply(s.getNumberOfShares()));
+                // invested uses cost basis (VALUE field) which includes commission
+                invested = invested.add(s.getValue());
             }
 
             // mAccountBalance and mAccountReconciled from QueryAccountBills both include market
