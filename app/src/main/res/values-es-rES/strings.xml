@@ -616,7 +616,6 @@
     <string name="budget_name">Nombre del Presupuesto</string>
     <string name="budget_year">Año del Presupuesto</string>
     <string name="budget_month">Presupuesto Mensual</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Reiniciar la aplicación para que los cambios tengan efecto.</string>
     <string name="print">Imprimir</string>
     <string name="min_19">Necesita al menos Android 4.4 para poder imprimir el documento.</string>

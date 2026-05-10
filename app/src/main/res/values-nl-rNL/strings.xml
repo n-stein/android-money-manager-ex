@@ -121,6 +121,7 @@
     <!-- category / subcategory -->
     <string name="category">Categorie</string>
     <string name="subcategory">Subcategorie</string>
+    <string name="navigation_mode">Navigatiemodus</string>
     <string name="category_empty_list">Geen categorie gevonden. Tik op de groene + knop om er een aan te maken.</string>
     <string name="select_category">Selecteer categorie</string>
     <string name="add_category">Voeg categorie toe</string>
@@ -647,7 +648,6 @@
     <string name="budget_year">Budgetjaar</string>
     <string name="budget_month">Budgetmaand</string>
     <string name="budget_month_optional">Begroting maand (optioneel)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Het programma zal nu afsluiten om de wijzigingen door te voeren. Start programma opnieuw.</string>
     <string name="print">Afdrukken</string>
     <string name="min_19">U heeft minstens Android 4.4 nodig om dit document te kunnen printen.</string>
