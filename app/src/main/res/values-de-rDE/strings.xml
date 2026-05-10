@@ -88,7 +88,13 @@
     <string name="account_empty_list">Keine Konten gefunden. Um ein Konto zu erstellen, tippen Sie auf die grüne Plus-Taste.</string>
     <string name="account_balance">Kontostand</string>
     <string name="account_reconciled_balance">abgestimmter Saldo</string>
+    <string name="total_balance">Gesamtwert</string>
+    <string name="cash_balance">Kontostand</string>
+    <string name="market_value">Marktwert</string>
+    <string name="invested">Investiert</string>
+    <string name="gain_loss">Gewinn / Verlust</string>
     <string name="delete_account">Konto löschen</string>
+    <string name="delete_stock_investment">Wertpapieranlage löschen</string>
     <string name="account_name">Kontoname</string>
     <string name="account_type">Kontoart</string>
     <string name="account_number">Kontonummer</string>
@@ -148,6 +154,8 @@
     <string name="amount">Betrag</string>
     <string name="total_amount">Gesamtbetrag</string>
     <string name="deposit">Einzahlung</string>
+    <string name="buy">Kauf</string>
+    <string name="sell">Verkauf</string>
     <string name="status">Status</string>
     <string name="status_reconciled">Ausgeglichen</string>
     <string name="status_void">ungültig</string>
@@ -172,6 +180,7 @@
     <string name="about">Über</string>
     <string name="add">Hinzufügen</string>
     <string name="confirmDelete">Möchten Sie den Eintrag wirklich löschen?</string>
+    <string name="confirm_delete_stock_investment">Möchten Sie die Wertpapieranlage löschen?</string>
     <string name="date">Datum</string>
     <string name="delete">Löschen</string>
     <string name="download">Download</string>
@@ -508,6 +517,11 @@
     <string name="download_price">Preis herunterladen</string>
     <string name="download_all_prices">Alle Preise herunterladen</string>
     <string name="edit_price">Preis bearbeiten</string>
+    <string name="price_history">Kursverlauf</string>
+    <string name="download_prices">Alle Preise herunterladen</string>
+    <string name="download_prices_explanation">Bitte wählen Sie das Startdatum. Die Preise werden bis heute heruntergeladen.</string>
+    <string name="no_price_history">Kein Preisverlauf verfügbar</string>
+    <string name="prices_downloaded">%1$d Preise heruntergeladen</string>
     <string name="price_updated">Preis aktualisiert</string>
     <string name="all_prices_updated">Alle Preise wurden aktualisiert.</string>
     <string name="download_complete">Download abgeschlossen.</string>
@@ -594,12 +608,15 @@
     <string name="symbol">Symbol</string>
     <string name="number_of_shares">Anzahl der Wertpapiere</string>
     <string name="purchase_price">Kaufpreis</string>
+    <string name="share_price">Wertpapierkurs</string>
     <string name="current_price">Aktueller Preis</string>
     <string name="price_date">Preis Datum</string>
     <string name="commission">Provision</string>
     <string name="value">Wert</string>
     <string name="view_transactions">Transaktionen anzeigen</string>
     <string name="view_transactions_sub">Transaktionen mit Unterkategorien anzeigen</string>
+    <string name="open_yahoo_finance">Seite bei Yahoo Finance öffnen</string>
+    <string name="no_browser_available">Kein Browser verfügbar</string>
     <string name="switch_active">Aktivieren/Inaktiv wechseln</string>
     <string name="error_downloading_symbol">Fehler beim Herunterladen des Preises für Symbol</string>
     <string name="error_updating_rates">Fehler beim Aktualisieren der Kurse</string>
@@ -648,6 +665,7 @@
     <string name="budget_year">Jahresbudget</string>
     <string name="budget_month">Monatsbudget</string>
     <string name="budget_month_optional">Budget Monat (optional)</string>
+    <string name="menu_copy">kopieren</string>
     <string name="app_restart">Die App wird sich nun schließen, um die Änderungen wirksam zu machen. Bitte starten Sie neu.</string>
     <string name="print">Drucken</string>
     <string name="min_19">Sie benötigen mindestens Android 4.4 um das Dokument zu drucken.</string>
@@ -762,6 +780,7 @@
     <string name="title_pref_budget_financial_year">Geschäftsjahr im Budget verwenden</string>
     <string name="summary_pref_budget_financial_year">Wenn angekreuzt, verwenden die Budgets das Haushaltsjahr anstelle des Kalenderjahres</string>
     <string name="shares">Wertpapiere</string>
+    <string name="menu_hide_zero_shares">Bestand > 0</string>
     <string name="loan">Darlehen</string>
     <string name="loan_account">Darlehenskonten</string>
     <string name="shares_accounts">Wertpapierkonten</string>
