@@ -347,21 +347,21 @@ public class AccountTransactionListFragment
         result = isFilterSelected(item);
         if (result) return true;
 
-            int itemId = item.getItemId();
-            if (itemId == R.id.menu_add_transaction_account) {
-                startCheckingAccountActivity();
-                result = true;
-            } else if (itemId == R.id.menu_export_to_csv) {
-                if (mAllDataListFragment != null && mAccount != null)
-                    mAllDataListFragment.exportDataToCSVFile(mAccount.getName());
-                result = true;
-            } else if (itemId == MENU_VIEW_PORTFOLIO) {
-                if (getActivity() instanceof MainActivity) {
-                    ((MainActivity) getActivity()).showPortfolioFragment(mAccountId);
-                }
-                result = true;
-            } else {
-                result = false;
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_add_transaction_account) {
+            startCheckingAccountActivity();
+            result = true;
+        } else if (itemId == R.id.menu_export_to_csv) {
+            if (mAllDataListFragment != null && mAccount != null)
+                mAllDataListFragment.exportDataToCSVFile(mAccount.getName());
+            result = true;
+        } else if (itemId == MENU_VIEW_PORTFOLIO) {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).showPortfolioFragment(mAccountId);
+            }
+            result = true;
+        } else {
+            result = false;
         }
 
         // If not consumed here (true), send for further processing to the parent.

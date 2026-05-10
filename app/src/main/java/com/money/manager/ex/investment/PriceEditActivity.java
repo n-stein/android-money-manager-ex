@@ -138,18 +138,18 @@ public class PriceEditActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-            int itemId = item.getItemId();
-            if (itemId == android.R.id.home) {
-                // cancel clicked. Prompt to confirm?
-                Timber.d("going back");
-            } else if (itemId == MenuHelper.save) {
-                // save & close
-                if (save()) {
-                    setResult(Activity.RESULT_OK);
-                    finish();
-                    return onActionDoneClick();
-                }
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            // cancel clicked. Prompt to confirm?
+            Timber.d("going back");
+        } else if (itemId == MenuHelper.save) {
+            // save & close
+            if (save()) {
+                setResult(Activity.RESULT_OK);
+                finish();
+                return onActionDoneClick();
+            }
+             return true;
         }
         return super.onOptionsItemSelected(item);
     }
