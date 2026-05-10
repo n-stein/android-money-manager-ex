@@ -387,8 +387,10 @@ public class InvestmentTransactionEditActivity
     private void displayStock(Stock stock, InvestmentTransactionViewHolder viewHolder) {
         if (mAccount == null) return;
 
-        // Date
-        String dateDisplay = new MmxDate(stock.getPurchaseDate()).toString(Constants.LONG_DATE_PATTERN);
+        // Date (use user-configured format with weekday prefix to match normal transactions)
+        String userPattern = dateTimeUtilsLazy.get().getUserDatePattern(InvestmentTransactionEditActivity.this);
+        String format = "EEE, " + userPattern;
+        String dateDisplay = dateTimeUtilsLazy.get().format(stock.getPurchaseDate(), format);
         viewHolder.dateView.setText(dateDisplay);
 
         // Account.
@@ -927,7 +929,9 @@ public class InvestmentTransactionEditActivity
     }
 
     private void showDate(Date date) {
-        String display = new MmxDate(date).toString(Constants.LONG_DATE_PATTERN);
+        String userPattern = dateTimeUtilsLazy.get().getUserDatePattern(InvestmentTransactionEditActivity.this);
+        String format = "EEE, " + userPattern;
+        String display = dateTimeUtilsLazy.get().format(date, format);
         mViewHolder.dateView.setText(display);
     }
 
