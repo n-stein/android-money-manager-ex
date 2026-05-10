@@ -163,16 +163,18 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
 
     // Helper methods for calculations
     private Money calculateUnrealizedGainLoss(Stock stock) {
-        Money current = stock.getCurrentPrice();
-        Money purchase = stock.getPurchasePrice();
-        return current.subtract(purchase).multiply(stock.getNumberOfShares());
+        // Market value - cost basis (VALUE field includes commission)
+        Money marketValue = stock.getCurrentPrice().multiply(stock.getNumberOfShares());
+        Money costBasis = stock.getValue();
+        return marketValue.subtract(costBasis);
     }
 
     private double calculateUnrealizedPercentage(Stock stock) {
-        Money purchase = stock.getPurchasePrice();
-        if (purchase.isZero()) return 0.0;
-        Money diff = stock.getCurrentPrice().subtract(purchase);
-        return (diff.toDouble() / purchase.toDouble()) * 100.0;
+        Money costBasis = stock.getValue();
+        if (costBasis.isZero()) return 0.0;
+        Money marketValue = stock.getCurrentPrice().multiply(stock.getNumberOfShares());
+        Money gainLoss = marketValue.subtract(costBasis);
+        return (gainLoss.toDouble() / costBasis.toDouble()) * 100.0;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
