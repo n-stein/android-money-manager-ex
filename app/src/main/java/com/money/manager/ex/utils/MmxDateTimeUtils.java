@@ -57,8 +57,6 @@ public class MmxDateTimeUtils {
         }
     }
 
-
-
     public MmxDateTimeUtils(Locale locale) {
         _locale = locale;
     }
