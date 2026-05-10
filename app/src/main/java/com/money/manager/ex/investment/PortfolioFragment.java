@@ -49,6 +49,7 @@ import com.money.manager.ex.datalayer.StockRepository;
 import com.money.manager.ex.datalayer.TaglinkRepository;
 import com.money.manager.ex.datalayer.TransactionLinkRepository;
 import com.money.manager.ex.database.ISplitTransaction;
+import com.money.manager.ex.domainmodel.AccountTransaction;
 import com.money.manager.ex.domainmodel.Account;
 import com.money.manager.ex.domainmodel.Stock;
 import com.money.manager.ex.domainmodel.StockHistory;
@@ -73,7 +74,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.preference.PreferenceManager;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 
 import com.mikepenz.fontawesome_typeface_library.FontAwesome;
 
@@ -510,6 +517,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
     private void updateDisplayedStocks() {
         if (mStocks == null) {
             mDisplayedStocks = null;
+            mAdapter.setRealizedGainLossByStockId(Collections.emptyMap());
             mAdapter.submitList(null);
             return;
         }
@@ -527,7 +535,35 @@ public class PortfolioFragment extends BaseRecyclerFragment {
             mDisplayedStocks = mStocks;
         }
 
+        mAdapter.setRealizedGainLossByStockId(calculateRealizedGainLossByStockId(mDisplayedStocks));
+
         mAdapter.submitList(new java.util.ArrayList<>(mDisplayedStocks), mAdapter::notifyDataSetChanged);
+    }
+
+    private Map<Long, PortfolioListAdapter.RealizedGainLoss> calculateRealizedGainLossByStockId(List<Stock> stocks) {
+        Map<Long, PortfolioListAdapter.RealizedGainLoss> result = new HashMap<>();
+        if (stocks == null || stocks.isEmpty()) {
+            return result;
+        }
+
+        TransactionLinkRepository linkRepo = new TransactionLinkRepository(requireContext());
+        ShareInfoRepository shareInfoRepo = new ShareInfoRepository(requireContext());
+        AccountTransactionRepository txRepo = new AccountTransactionRepository(requireContext());
+
+        for (Stock stock : stocks) {
+            if (stock == null || stock.getId() == null) continue;
+            result.put(stock.getId(), calculateRealizedGainLoss(stock.getId(), linkRepo, shareInfoRepo, txRepo));
+        }
+
+        return result;
+    }
+
+    private PortfolioListAdapter.RealizedGainLoss calculateRealizedGainLoss(
+            long stockId,
+            TransactionLinkRepository linkRepo,
+            ShareInfoRepository shareInfoRepo,
+            AccountTransactionRepository txRepo) {
+        return new RealizedGainLossCalculator(linkRepo, shareInfoRepo, txRepo).calculate(stockId);
     }
 
     private boolean isHideZeroSharesEnabled() {
@@ -591,7 +627,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         return true;
     }
 
-    private List<TransactionLink> getStockLinks(TransactionLinkRepository linkRepo, long stockId) {
+        private static List<TransactionLink> getStockLinks(TransactionLinkRepository linkRepo, long stockId) {
         return linkRepo.query(
                 new com.money.manager.ex.datalayer.Select(linkRepo.getAllColumns())
                         .where("LOWER(" + TransactionLink.LINKTYPE + ")=? AND "
@@ -668,6 +704,153 @@ public class PortfolioFragment extends BaseRecyclerFragment {
             this.marketValue = marketValue;
             this.invested = invested;
             this.gainLoss = gainLoss;
+        }
+    }
+
+    private static final class TradeData {
+        private final long transactionId;
+        private final Date date;
+        private final double shares;
+        private final double price;
+        private final double commission;
+
+        private TradeData(long transactionId, Date date, double shares,
+                          double price, double commission) {
+            this.transactionId = transactionId;
+            this.date = date;
+            this.shares = shares;
+            this.price = price;
+            this.commission = commission;
+        }
+
+        private boolean isBuy() {
+            return shares > 0.0;
+        }
+
+        private boolean isSell() {
+            return shares < 0.0;
+        }
+    }
+
+    private static final class RealizedGainLossCalculator {
+        private final TransactionLinkRepository linkRepo;
+        private final ShareInfoRepository shareInfoRepo;
+        private final AccountTransactionRepository txRepo;
+
+        private RealizedGainLossCalculator(TransactionLinkRepository linkRepo,
+                                           ShareInfoRepository shareInfoRepo,
+                                           AccountTransactionRepository txRepo) {
+            this.linkRepo = linkRepo;
+            this.shareInfoRepo = shareInfoRepo;
+            this.txRepo = txRepo;
+        }
+
+        private PortfolioListAdapter.RealizedGainLoss calculate(long stockId) {
+            List<TradeData> trades = loadTrades(stockId);
+            if (trades.isEmpty()) {
+                return zeroResult();
+            }
+
+            trades.sort(Comparator
+                    .comparing((TradeData trade) -> trade.date, Comparator.nullsLast(Date::compareTo))
+                    .thenComparingLong(trade -> trade.transactionId));
+
+            Money realizedAmount = MoneyFactory.fromDouble(0);
+            double realizedCostBasis = 0.0;
+            Position position = new Position();
+
+            for (TradeData trade : trades) {
+                if (trade.isBuy()) {
+                    position.applyBuy(trade);
+                    continue;
+                }
+                if (trade.isSell()) {
+                    Result result = position.applySell(trade);
+                    realizedAmount = realizedAmount.add(MoneyFactory.fromDouble(result.realizedAmount));
+                    realizedCostBasis += result.realizedCostBasis;
+                }
+            }
+
+            double realizedPercent = realizedCostBasis > 0.0
+                    ? (realizedAmount.toDouble() / realizedCostBasis) * 100.0
+                    : 0.0;
+            return new PortfolioListAdapter.RealizedGainLoss(realizedAmount, realizedPercent);
+        }
+
+        private List<TradeData> loadTrades(long stockId) {
+            List<TransactionLink> links = getStockLinks(linkRepo, stockId);
+            if (links == null || links.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<TradeData> trades = new ArrayList<>();
+            for (TransactionLink link : links) {
+                TradeData trade = createTrade(link);
+                if (trade != null) {
+                    trades.add(trade);
+                }
+            }
+            return trades;
+        }
+
+        private TradeData createTrade(TransactionLink link) {
+            if (link == null || link.getCheckingAccountId() == null) {
+                return null;
+            }
+
+            Long transactionId = link.getCheckingAccountId();
+            com.money.manager.ex.domainmodel.ShareInfo shareInfo = shareInfoRepo.loadByTransactionId(transactionId);
+            if (shareInfo == null) {
+                return null;
+            }
+
+            AccountTransaction tx = txRepo.load(transactionId);
+            Date txDate = tx != null ? tx.getDate() : null;
+
+            double shares = shareInfo.getShareNumber() != null ? shareInfo.getShareNumber() : 0.0;
+            double price = shareInfo.getSharePrice() != null ? shareInfo.getSharePrice() : 0.0;
+            double commission = shareInfo.getShareCommission() != null ? shareInfo.getShareCommission() : 0.0;
+            return new TradeData(transactionId, txDate, shares, price, commission);
+        }
+
+        private PortfolioListAdapter.RealizedGainLoss zeroResult() {
+            return new PortfolioListAdapter.RealizedGainLoss(MoneyFactory.fromDouble(0), 0.0);
+        }
+
+        private static final class Position {
+            private double heldShares;
+            private double heldCostBasis;
+
+            private void applyBuy(TradeData trade) {
+                heldShares += trade.shares;
+                heldCostBasis += (trade.shares * trade.price) + trade.commission;
+            }
+
+            private Result applySell(TradeData trade) {
+                double soldShares = Math.abs(trade.shares);
+                double sharesMatched = Math.min(soldShares, heldShares);
+                double averageCost = heldShares > 0.0 ? heldCostBasis / heldShares : 0.0;
+                double costRemoved = sharesMatched * averageCost;
+                double proceeds = (soldShares * trade.price) - trade.commission;
+
+                heldShares = Math.max(0.0, heldShares - sharesMatched);
+                heldCostBasis = Math.max(0.0, heldCostBasis - costRemoved);
+                if (heldShares == 0.0) {
+                    heldCostBasis = 0.0;
+                }
+
+                return new Result(proceeds - costRemoved, costRemoved);
+            }
+        }
+
+        private static final class Result {
+            private final double realizedAmount;
+            private final double realizedCostBasis;
+
+            private Result(double realizedAmount, double realizedCostBasis) {
+                this.realizedAmount = realizedAmount;
+                this.realizedCostBasis = realizedCostBasis;
+            }
         }
     }
 
