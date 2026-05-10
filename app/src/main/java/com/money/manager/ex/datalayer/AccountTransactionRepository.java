@@ -118,6 +118,9 @@ public class AccountTransactionRepository
                 )
         );
 
+        // ignore logically deleted transactions
+        where.addStatement("(DELETEDTIME IS NULL OR DELETEDTIME = '')");
+
         return this.count(where.getWhere(), null) > 0;
     }
 

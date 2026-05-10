@@ -35,7 +35,8 @@ public enum ContextMenuIds {
     VIEW_TRANSACTIONS_SUB(11),
     CASH_LEDGER(13),
     WATCHLIST(14),
-    SWITCH_ACTIVE(12);
+    SWITCH_ACTIVE(12),
+    OPEN_YAHOO_FINANCE(16);
 
     public static ContextMenuIds get(int id) {
         for (ContextMenuIds itemId : ContextMenuIds.values()) {
