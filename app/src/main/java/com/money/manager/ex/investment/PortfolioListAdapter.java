@@ -21,8 +21,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.HorizontalScrollView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -178,16 +176,14 @@ public class PortfolioListAdapter extends ListAdapter<Stock, PortfolioListAdapte
             unrealizedGLAmountTextView = itemView.findViewById(R.id.unrealizedGLAmountTextView);
             unrealizedGLPercentTextView = itemView.findViewById(R.id.unrealizedGLPercentTextView);
 
-            LinearLayout mainLayout = (LinearLayout) ((HorizontalScrollView) itemView).getChildAt(0);
-
-            mainLayout.setOnClickListener(v -> {
+            itemView.setOnClickListener(v -> {
                 int position = getBindingAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && listener != null) {
                     listener.onItemClick(getItem(position).getId());
                 }
             });
 
-            mainLayout.setOnLongClickListener(v -> {
+            itemView.setOnLongClickListener(v -> {
                 int position = getBindingAdapterPosition();
                 if (position != RecyclerView.NO_POSITION && longClickListener != null) {
                     Stock stock = getItem(position);
