@@ -102,7 +102,7 @@
     <string name="gain_loss">Gain / Loss</string>
     <string name="unrealized_gain_loss">Unrealized G/L</string>
     <string name="realized_gain_loss">Realized G/L</string>
-    <string name="percentage">%</string>
+    <string name="percentage" translatable="false">%</string>
     <string name="delete_account">Delete Account</string>
     <string name="delete_stock_investment">Delete Stock Investment</string>
     <string name="account_name">Account name</string>
