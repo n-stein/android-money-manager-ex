@@ -106,6 +106,7 @@ import com.money.manager.ex.scheduled.ScheduledTransactionListFragment;
 import com.money.manager.ex.reports.CategoriesReportActivity;
 import com.money.manager.ex.reports.GeneralReportActivity;
 import com.money.manager.ex.reports.IncomeVsExpensesActivity;
+import com.money.manager.ex.reports.SummaryOfStocksReportActivity;
 import com.money.manager.ex.reports.PayeesReportActivity;
 import com.money.manager.ex.reports.SummaryOfAccountsReportActivity;
 import com.money.manager.ex.search.SearchActivity;
@@ -619,8 +620,10 @@ public class MainActivity
 
         long itemId = item.getId();
 
-        if (itemId == R.id.menu_home) {
-            showFragment(HomeFragment.class);
+        if (itemId == R.id.menu_report_summary_of_stocks) {
+            startActivity(new Intent(this, SummaryOfStocksReportActivity.class));
+        } else if (itemId == R.id.menu_home) {
+            initHomeFragment();
         } else if (itemId == R.id.menu_sync) {
             SyncManager sync = new SyncManager(this);
             sync.triggerSynchronization();
@@ -634,8 +637,6 @@ public class MainActivity
             (new FileStorageHelper(this)).showCreateFilePicker();
             // TODO request password 3/3
         } else if (itemId == R.id.menu_account) {
-            showFragment(AccountListFragment.class);
-        } else if (itemId == R.id.menu_category) {
             showFragment(NestedCategoryListFragment.class);
         } else if (itemId == R.id.menu_currency) {
             Intent intent = new Intent(MainActivity.this, CurrencyListActivity.class);
@@ -676,6 +677,8 @@ public class MainActivity
             startActivity(new Intent(this, CashFlowReportActivity.class));
         } else if (itemId == R.id.menu_report_summary_of_accounts) {
             startActivity(new Intent(this, SummaryOfAccountsReportActivity.class));
+        } else if (itemId == R.id.menu_report_summary_of_stocks) {
+            startActivity(new Intent(this, SummaryOfStocksReportActivity.class));
         } else if (itemId == R.id.menu_help) {
             startActivity(new Intent(MainActivity.this, HelpActivity.class));
         } else if (itemId == R.id.menu_about) {
@@ -913,6 +916,11 @@ public class MainActivity
         // summary of accounts
         childReports.add(new DrawerMenuItem().withId(R.id.menu_report_summary_of_accounts)
             .withText(getString(R.string.menu_report_summary_of_accounts))
+            .withIconDrawable(uiHelper.getIcon(MMXIconFont.Icon.mmx_reports)
+                .color(iconColor)));
+        // summary of stocks
+        childReports.add(new DrawerMenuItem().withId(R.id.menu_report_summary_of_stocks)
+            .withText(getString(R.string.menu_report_summary_of_stocks))
             .withIconDrawable(uiHelper.getIcon(MMXIconFont.Icon.mmx_reports)
                 .color(iconColor)));
         // CashFlow
@@ -1312,7 +1320,8 @@ public class MainActivity
 
         // See if the fragment is already there.
         Fragment existingFragment = getSupportFragmentManager().findFragmentByTag(tag);
-        if (existingFragment != null) return;
+        // If the Home fragment exists and is already visible, nothing to do.
+        if (existingFragment != null && existingFragment.isVisible()) return;
 
         // Create new Home fragment.
         HomeFragment fragment = new HomeFragment();

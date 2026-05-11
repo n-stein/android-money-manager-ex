@@ -62,6 +62,7 @@
         android:supportsRtl="true">
 
         <activity android:name=".reports.GeneralReportActivity" />
+        <activity android:name=".reports.SummaryOfStocksReportActivity" />
 
         <meta-data
             android:name="com.google.android.backup.api_key"

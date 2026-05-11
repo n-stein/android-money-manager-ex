@@ -99,6 +99,7 @@
     <string name="cash_balance">Cash Balance</string>
     <string name="market_value">Market Value</string>
     <string name="invested">Invested</string>
+    <string name="total_cost">Total Cost</string>
     <string name="gain_loss">Gain / Loss</string>
     <string name="unrealized_gain_loss">Unrealized G/L</string>
     <string name="realized_gain_loss">Realized G/L</string>
@@ -345,6 +346,9 @@
     <string name="menu_report_income_vs_expenses">Income Vs Expenses</string>
     <string name="menu_report_cashflow">Cash Flow</string>
     <string name="menu_report_summary_of_accounts">Summary of Accounts</string>
+    <string name="menu_report_summary_of_stocks">Summary of Stocks</string>
+    <string name="report_subtotal">Subtotal</string>
+    <string name="report_grand_total">Grand total</string>
     <string name="total">Total</string>
     <!--<string name="option">Option</string>-->
     <string name="all_time">All Time</string>
