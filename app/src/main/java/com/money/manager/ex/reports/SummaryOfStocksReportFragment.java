@@ -118,72 +118,29 @@ public class SummaryOfStocksReportFragment extends Fragment {
         Money grandRealizedCostBasisBase = MoneyFactory.fromDouble(0);
 
         for (Account account : accounts) {
-            if (account == null || account.getId() == null) {
+            AccountSummary accountSummary = buildAccountSummary(account, stockRepository,
+                linkRepository, shareInfoRepository, transactionRepository, baseCurrencyId);
+            if (accountSummary == null) {
                 continue;
             }
 
-            long accountCurrencyId = account.getCurrencyId() != null ? account.getCurrencyId() : baseCurrencyId;
+            rows.addAll(accountSummary.rows);
 
-            List<Stock> stocks = stockRepository.loadByAccount(account.getId());
-            if (stocks == null) {
-                stocks = new ArrayList<>();
-            }
-            stocks.sort(Comparator.comparing(Stock::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
-                    .thenComparing(stock -> stock.getSymbol() == null ? "" : stock.getSymbol(), String.CASE_INSENSITIVE_ORDER));
-
-            if (!stocks.isEmpty()) {
-                rows.add(ReportRow.accountHeader(account.getName()));
+            if (accountSummary.hasStocks) {
+                rows.add(ReportRow.subtotal(getString(R.string.report_subtotal), accountSummary.currencyId,
+                    accountSummary.totals.shares, accountSummary.totals.commission,
+                    accountSummary.totals.totalCost, accountSummary.totals.marketValue,
+                    accountSummary.totals.unrealizedGainLoss, accountSummary.totals.realizedGainLoss,
+                    accountSummary.totals.realizedCostBasis));
             }
 
-            Money accountShares = MoneyFactory.fromDouble(0);
-            Money accountTotalCost = MoneyFactory.fromDouble(0);
-            Money accountCommission = MoneyFactory.fromDouble(0);
-            Money accountMarketValue = MoneyFactory.fromDouble(0);
-            Money accountUnrealizedGainLoss = MoneyFactory.fromDouble(0);
-            Money accountRealizedGainLoss = MoneyFactory.fromDouble(0);
-            Money accountRealizedCostBasis = MoneyFactory.fromDouble(0);
-
-            for (Stock stock : stocks) {
-                if (stock == null) {
-                    continue;
-                }
-
-                Money shares = MoneyFactory.fromDouble(safeDouble(stock.getNumberOfShares()));
-                RealizedGainLoss realizedGainLoss = calculateRealizedGainLoss(stock.getId(),
-                    linkRepository, shareInfoRepository, transactionRepository);
-                Money marketValue = stock.getCurrentPrice().multiply(stock.getNumberOfShares());
-                Money totalCost = realizedGainLoss.investedCost;
-                Money commission = realizedGainLoss.totalCommission;
-                Money unrealizedGainLoss = realizedGainLoss.openCostBasis.toDouble() <= 0.0
-                    ? MoneyFactory.fromDouble(0)
-                    : marketValue.subtract(realizedGainLoss.openCostBasis);
-
-                rows.add(ReportRow.stock(accountCurrencyId, stock, shares, commission, totalCost, marketValue,
-                    realizedGainLoss.openCostBasis, unrealizedGainLoss, realizedGainLoss.amount,
-                    realizedGainLoss.costBasis));
-
-                accountShares = accountShares.add(shares);
-                accountTotalCost = accountTotalCost.add(totalCost);
-                accountCommission = accountCommission.add(commission);
-                accountMarketValue = accountMarketValue.add(marketValue);
-                accountUnrealizedGainLoss = accountUnrealizedGainLoss.add(unrealizedGainLoss);
-                accountRealizedGainLoss = accountRealizedGainLoss.add(realizedGainLoss.amount);
-                accountRealizedCostBasis = accountRealizedCostBasis.add(realizedGainLoss.costBasis);
-            }
-
-            if (!stocks.isEmpty()) {
-                rows.add(ReportRow.subtotal(getString(R.string.report_subtotal), accountCurrencyId, accountShares, accountCommission,
-                    accountTotalCost, accountMarketValue, accountUnrealizedGainLoss,
-                    accountRealizedGainLoss, accountRealizedCostBasis));
-            }
-
-            grandShares = grandShares.add(accountShares);
-            grandCommissionBase = grandCommissionBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountCommission));
-            grandTotalCostBase = grandTotalCostBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountTotalCost));
-            grandMarketValueBase = grandMarketValueBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountMarketValue));
-            grandUnrealizedGainLossBase = grandUnrealizedGainLossBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountUnrealizedGainLoss));
-            grandRealizedGainLossBase = grandRealizedGainLossBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountRealizedGainLoss));
-            grandRealizedCostBasisBase = grandRealizedCostBasisBase.add(convertToBase(currencyService, baseCurrencyId, accountCurrencyId, accountRealizedCostBasis));
+            grandShares = grandShares.add(accountSummary.totals.shares);
+            grandCommissionBase = grandCommissionBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.commission));
+            grandTotalCostBase = grandTotalCostBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.totalCost));
+            grandMarketValueBase = grandMarketValueBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.marketValue));
+            grandUnrealizedGainLossBase = grandUnrealizedGainLossBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.unrealizedGainLoss));
+            grandRealizedGainLossBase = grandRealizedGainLossBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.realizedGainLoss));
+            grandRealizedCostBasisBase = grandRealizedCostBasisBase.add(convertToBase(currencyService, baseCurrencyId, accountSummary.currencyId, accountSummary.totals.realizedCostBasis));
         }
 
         rows.add(ReportRow.grandTotal(getString(R.string.report_grand_total), baseCurrencyId, grandShares, grandCommissionBase,
@@ -191,6 +148,65 @@ public class SummaryOfStocksReportFragment extends Fragment {
             grandRealizedGainLossBase, grandRealizedCostBasisBase));
 
         return new ReportModel(rows);
+    }
+
+    @Nullable
+    private AccountSummary buildAccountSummary(@Nullable Account account,
+            StockRepository stockRepository,
+            TransactionLinkRepository linkRepository,
+            ShareInfoRepository shareInfoRepository,
+            AccountTransactionRepository transactionRepository,
+            long baseCurrencyId) {
+        if (account == null || account.getId() == null) {
+            return null;
+        }
+
+        long accountCurrencyId = account.getCurrencyId() != null ? account.getCurrencyId() : baseCurrencyId;
+
+        List<Stock> stocks = stockRepository.loadByAccount(account.getId());
+        if (stocks == null) {
+            stocks = new ArrayList<>();
+        }
+        stocks.sort(Comparator.comparing(Stock::getName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER))
+                .thenComparing(stock -> stock.getSymbol() == null ? "" : stock.getSymbol(), String.CASE_INSENSITIVE_ORDER));
+
+        List<ReportRow> rows = new ArrayList<>();
+        if (!stocks.isEmpty()) {
+            rows.add(ReportRow.accountHeader(account.getName()));
+        }
+
+        AccountTotals totals = new AccountTotals();
+        for (Stock stock : stocks) {
+            if (stock == null) {
+                continue;
+            }
+
+            ReportRow row = buildStockRow(accountCurrencyId, stock, linkRepository,
+                shareInfoRepository, transactionRepository);
+            rows.add(row);
+            totals.add(row);
+        }
+
+        return new AccountSummary(accountCurrencyId, rows, totals, !stocks.isEmpty());
+    }
+
+    private ReportRow buildStockRow(long accountCurrencyId, Stock stock,
+            TransactionLinkRepository linkRepository,
+            ShareInfoRepository shareInfoRepository,
+            AccountTransactionRepository transactionRepository) {
+        Money shares = MoneyFactory.fromDouble(safeDouble(stock.getNumberOfShares()));
+        RealizedGainLoss realizedGainLoss = calculateRealizedGainLoss(stock.getId(),
+            linkRepository, shareInfoRepository, transactionRepository);
+        Money marketValue = stock.getCurrentPrice().multiply(stock.getNumberOfShares());
+        Money totalCost = realizedGainLoss.investedCost;
+        Money commission = realizedGainLoss.totalCommission;
+        Money unrealizedGainLoss = realizedGainLoss.openCostBasis.toDouble() <= 0.0
+            ? MoneyFactory.fromDouble(0)
+            : marketValue.subtract(realizedGainLoss.openCostBasis);
+
+        return ReportRow.stock(accountCurrencyId, stock, new StockMetrics(shares, commission, totalCost,
+            marketValue, realizedGainLoss.openCostBasis, unrealizedGainLoss, realizedGainLoss.amount,
+            realizedGainLoss.costBasis));
     }
 
     private void renderModel(ReportModel model) {
@@ -314,10 +330,6 @@ public class SummaryOfStocksReportFragment extends Fragment {
 
     private TextView createCell(String text, boolean alignStart, boolean bold) {
         return createCell(text, alignStart, bold, null, false);
-    }
-
-    private TextView createCell(String text, boolean alignStart, boolean bold, @Nullable Money value) {
-        return createCell(text, alignStart, bold, value, false);
     }
 
     private TextView createCell(String text, boolean alignStart, boolean bold, @Nullable Money value,
@@ -469,6 +481,64 @@ public class SummaryOfStocksReportFragment extends Fragment {
         }
     }
 
+    private static final class AccountSummary {
+        private final long currencyId;
+        private final List<ReportRow> rows;
+        private final AccountTotals totals;
+        private final boolean hasStocks;
+
+        private AccountSummary(long currencyId, List<ReportRow> rows, AccountTotals totals,
+                boolean hasStocks) {
+            this.currencyId = currencyId;
+            this.rows = rows;
+            this.totals = totals;
+            this.hasStocks = hasStocks;
+        }
+    }
+
+    private static final class AccountTotals {
+        private Money shares = MoneyFactory.fromDouble(0);
+        private Money commission = MoneyFactory.fromDouble(0);
+        private Money totalCost = MoneyFactory.fromDouble(0);
+        private Money marketValue = MoneyFactory.fromDouble(0);
+        private Money unrealizedGainLoss = MoneyFactory.fromDouble(0);
+        private Money realizedGainLoss = MoneyFactory.fromDouble(0);
+        private Money realizedCostBasis = MoneyFactory.fromDouble(0);
+
+        private void add(ReportRow row) {
+            shares = shares.add(row.shares);
+            commission = commission.add(row.commission);
+            totalCost = totalCost.add(row.totalCost);
+            marketValue = marketValue.add(row.marketValue);
+            unrealizedGainLoss = unrealizedGainLoss.add(row.unrealizedGainLoss);
+            realizedGainLoss = realizedGainLoss.add(row.realizedGainLoss);
+            realizedCostBasis = realizedCostBasis.add(row.realizedCostBasis);
+        }
+    }
+
+    private static final class StockMetrics {
+        private final Money shares;
+        private final Money commission;
+        private final Money totalCost;
+        private final Money marketValue;
+        private final Money invested;
+        private final Money unrealizedGainLoss;
+        private final Money realizedGainLoss;
+        private final Money realizedCostBasis;
+
+        private StockMetrics(Money shares, Money commission, Money totalCost, Money marketValue,
+                Money invested, Money unrealizedGainLoss, Money realizedGainLoss, Money realizedCostBasis) {
+            this.shares = shares;
+            this.commission = commission;
+            this.totalCost = totalCost;
+            this.marketValue = marketValue;
+            this.invested = invested;
+            this.unrealizedGainLoss = unrealizedGainLoss;
+            this.realizedGainLoss = realizedGainLoss;
+            this.realizedCostBasis = realizedCostBasis;
+        }
+    }
+
     private static final class ReportRow {
         private final ReportRowType rowType;
         private final String accountName;
@@ -515,13 +585,11 @@ public class SummaryOfStocksReportFragment extends Fragment {
                     MoneyFactory.fromDouble(0));
         }
 
-        private static ReportRow stock(long displayCurrencyId, Stock stock,
-                Money shares, Money commission, Money totalCost, Money marketValue, Money invested,
-                Money unrealizedGainLoss, Money realizedGainLoss, Money realizedCostBasis) {
+        private static ReportRow stock(long displayCurrencyId, Stock stock, StockMetrics metrics) {
             return new ReportRow(ReportRowType.STOCK, "", displayCurrencyId,
-                    stock.getName(), stock.getSymbol(), shares, commission, totalCost, stock.getPurchasePrice(),
-                    stock.getCurrentPrice(), invested, marketValue, unrealizedGainLoss, realizedGainLoss,
-                    realizedCostBasis);
+                stock.getName(), stock.getSymbol(), metrics.shares, metrics.commission, metrics.totalCost,
+                stock.getPurchasePrice(), stock.getCurrentPrice(), metrics.invested, metrics.marketValue,
+                metrics.unrealizedGainLoss, metrics.realizedGainLoss, metrics.realizedCostBasis);
         }
 
         private static ReportRow subtotal(String label, long displayCurrencyId,
