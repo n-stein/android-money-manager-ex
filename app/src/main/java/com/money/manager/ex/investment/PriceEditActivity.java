@@ -103,7 +103,6 @@ public class PriceEditActivity
     private StockHistoryAdapter historyAdapter;
     private RecyclerView priceHistoryRecyclerView;
     private LineChart priceHistoryChart;
-    private Spinner chartPeriodSpinner;
     private RobotoTextView stockNameTextView;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -116,6 +115,51 @@ public class PriceEditActivity
     private boolean suppressChartSelectionCallback;
     private boolean suppressChartValueSelected;
     private int chartTextColor = -1;
+
+    // Helper: populate chart lists from history
+    private void buildChartLists(List<StockHistory> filteredHistory, ArrayList<String> xValues, ArrayList<Entry> entries) {
+        currentChartIsoDates = new ArrayList<>();
+        for (int i = 0; i < filteredHistory.size(); i++) {
+            StockHistory history = filteredHistory.get(i);
+            String valueString = history.getString(StockHistory.VALUE);
+            if (valueString == null) {
+                continue;
+            }
+
+            currentChartIsoDates.add(history.getString(StockHistory.DATE));
+            xValues.add(dateTimeUtilsLazy.get().getUserFormattedDate(this, history.getDate()));
+            entries.add(new Entry((float) MoneyFactory.fromString(valueString).toDouble(), i));
+        }
+    }
+
+    // Helper: apply built data lists to the chart
+    private void applyDataSetToChart(ArrayList<String> xValues, ArrayList<Entry> entries) {
+        LineDataSet dataSet = new LineDataSet(entries, model.symbol);
+        dataSet.setColor(getResources().getColor(R.color.material_blue_500));
+        dataSet.setCircleColor(getResources().getColor(R.color.material_blue_500));
+        dataSet.setLineWidth(2f);
+        dataSet.setDrawCircles(true);
+        dataSet.setDrawValues(false);
+        dataSet.setHighLightColor(getResources().getColor(R.color.material_deep_orange_500));
+        dataSet.setDrawFilled(false);
+        dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
+
+        LineData data = new LineData(xValues, dataSet);
+        if (chartTextColor != -1) {
+            data.setValueTextColor(getResources().getColor(chartTextColor));
+        }
+
+        priceHistoryChart.setData(data);
+
+        XAxis xAxis = priceHistoryChart.getXAxis();
+        if (xAxis != null) {
+            xAxis.setLabelsToSkip(Math.max(0, xValues.size() / 6));
+        }
+
+        priceHistoryChart.notifyDataSetChanged();
+        selectChartDate(model != null && model.date != null ? model.date.toDate() : null);
+        priceHistoryChart.invalidate();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -400,40 +444,9 @@ public class PriceEditActivity
     private void setupPriceHistoryChart() {
         chartTextColor = new UIHelper(this).resolveAttribute(R.attr.chartTextColor);
         priceHistoryChart = findViewById(R.id.priceHistoryChart);
-        chartPeriodSpinner = findViewById(R.id.priceChartPeriodSpinner);
-
+        Spinner chartPeriodSpinner = findViewById(R.id.priceChartPeriodSpinner);
         if (chartPeriodSpinner != null) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_spinner_item,
-                    buildChartPeriodLabels());
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            chartPeriodSpinner.setAdapter(adapter);
-            suppressChartSelectionCallback = true;
-            chartPeriodSpinner.setSelection(selectedChartPeriod.ordinal());
-            chartPeriodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
-                    if (suppressChartSelectionCallback) {
-                        suppressChartSelectionCallback = false;
-                        return;
-                    }
-
-                    PriceChartPeriod[] values = PriceChartPeriod.values();
-                    if (position < 0 || position >= values.length) {
-                        return;
-                    }
-                    selectedChartPeriod = values[position];
-                    if (selectedChartPeriod == PriceChartPeriod.CUSTOM_RANGE) {
-                        pickCustomRange();
-                        return;
-                    }
-                    renderPriceChart();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                }
-            });
+            setupChartPeriodSpinner(chartPeriodSpinner);
         }
 
         if (priceHistoryChart == null) {
@@ -478,6 +491,46 @@ public class PriceEditActivity
         }
 
         // When the user selects a point in the chart, update the date picker and scroll the table.
+        setupChartValueSelectedListener();
+    }
+
+    private void setupChartPeriodSpinner(Spinner chartPeriodSpinner) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item,
+                buildChartPeriodLabels());
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        chartPeriodSpinner.setAdapter(adapter);
+        suppressChartSelectionCallback = true;
+        chartPeriodSpinner.setSelection(selectedChartPeriod.ordinal());
+        chartPeriodSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, android.view.View view, int position, long id) {
+                if (suppressChartSelectionCallback) {
+                    suppressChartSelectionCallback = false;
+                    return;
+                }
+
+                PriceChartPeriod[] values = PriceChartPeriod.values();
+                if (position < 0 || position >= values.length) {
+                    return;
+                }
+                selectedChartPeriod = values[position];
+                if (selectedChartPeriod == PriceChartPeriod.CUSTOM_RANGE) {
+                    pickCustomRange();
+                    return;
+                }
+                renderPriceChart();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Intentionally no-op: no action required when nothing is selected.
+            }
+        });
+    }
+
+    private void setupChartValueSelectedListener() {
+        if (priceHistoryChart == null) return;
         priceHistoryChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
                 if (suppressChartValueSelected) return;
@@ -501,6 +554,7 @@ public class PriceEditActivity
             }
 
             public void onNothingSelected() {
+                // Intentionally no-op: no action required when nothing is selected.
             }
         });
     }
@@ -539,19 +593,7 @@ public class PriceEditActivity
 
         ArrayList<String> xValues = new ArrayList<>();
         ArrayList<Entry> entries = new ArrayList<>();
-        currentChartIsoDates = new ArrayList<>();
-
-        for (int i = 0; i < filteredHistory.size(); i++) {
-            StockHistory history = filteredHistory.get(i);
-            String valueString = history.getString(StockHistory.VALUE);
-            if (valueString == null) {
-                continue;
-            }
-
-            currentChartIsoDates.add(history.getString(StockHistory.DATE));
-            xValues.add(dateTimeUtilsLazy.get().getUserFormattedDate(this, history.getDate()));
-            entries.add(new Entry((float) MoneyFactory.fromString(valueString).toDouble(), i));
-        }
+        buildChartLists(filteredHistory, xValues, entries);
 
         if (entries.isEmpty()) {
             priceHistoryChart.clear();
@@ -559,31 +601,7 @@ public class PriceEditActivity
             return;
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, model.symbol);
-        dataSet.setColor(getResources().getColor(R.color.material_blue_500));
-        dataSet.setCircleColor(getResources().getColor(R.color.material_blue_500));
-        dataSet.setLineWidth(2f);
-        dataSet.setDrawCircles(true);
-        dataSet.setDrawValues(false);
-        dataSet.setHighLightColor(getResources().getColor(R.color.material_deep_orange_500));
-        dataSet.setDrawFilled(false);
-        dataSet.setAxisDependency(YAxis.AxisDependency.LEFT);
-
-        LineData data = new LineData(xValues, dataSet);
-        if (chartTextColor != -1) {
-            data.setValueTextColor(getResources().getColor(chartTextColor));
-        }
-
-        priceHistoryChart.setData(data);
-
-        XAxis xAxis = priceHistoryChart.getXAxis();
-        if (xAxis != null) {
-            xAxis.setLabelsToSkip(Math.max(0, xValues.size() / 6));
-        }
-
-        priceHistoryChart.notifyDataSetChanged();
-        selectChartDate(model != null && model.date != null ? model.date.toDate() : null);
-        priceHistoryChart.invalidate();
+        applyDataSetToChart(xValues, entries);
     }
 
     private void selectChartDate(Date date) {
@@ -625,10 +643,20 @@ public class PriceEditActivity
             return new ArrayList<>();
         }
 
+        Date[] range = computeStartEndForPeriod(selectedChartPeriod, latestIsoDate);
+        if (range == null) {
+            return new ArrayList<>();
+        }
+
+        return filterHistoryByRange(range[0], range[1]);
+    }
+
+    private Date[] computeStartEndForPeriod(PriceChartPeriod period, String latestIsoDate) {
+        if (latestIsoDate == null) return null;
         MmxDate endDate = new MmxDate(latestIsoDate);
         MmxDate startDate = new MmxDate(latestIsoDate);
 
-        switch (selectedChartPeriod) {
+        switch (period) {
             case LAST_30_DAYS:
                 startDate = startDate.minusDays(29);
                 break;
@@ -643,10 +671,11 @@ public class PriceEditActivity
                 break;
             case ALL_TIME:
             default:
+                // ALL_TIME handled elsewhere; return full range
                 break;
         }
 
-        return filterHistoryByRange(startDate.toDate(), endDate.toDate());
+        return new Date[]{startDate.toDate(), endDate.toDate()};
     }
 
     private List<StockHistory> filterHistoryByRange(Date fromDate, Date toDate) {
