@@ -484,7 +484,6 @@
     <string name="update_prices">Actualizar cotizaciones</string>
     <string name="update_price">Actualizar cotización</string>
     <string name="download_price">Descargar precio</string>
-    <string name="edit_price">Editar precio</string>
     <string name="price_updated">Cotización actualizada</string>
     <string name="all_prices_updated">Todos las cotizaciones fueron actualizadas.</string>
     <string name="download_complete">Descarga completada.</string>

@@ -435,7 +435,6 @@
     <string name="update_prices">עדכן מחירים</string>
     <string name="update_price">עדכן מחיר</string>
     <string name="download_price">הורד מחיר</string>
-    <string name="edit_price">ערוך מחיר</string>
     <string name="price_updated">עדכן מחיר</string>
     <string name="all_prices_updated">כל המחירים עודכנו.</string>
     <string name="download_complete">הורדה הושלמה.</string>

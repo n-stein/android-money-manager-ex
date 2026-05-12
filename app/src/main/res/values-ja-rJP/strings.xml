@@ -435,7 +435,6 @@
     <string name="update_prices">価格の更新</string>
     <string name="update_price">価格の更新</string>
     <string name="download_price">ダウンロード価格</string>
-    <string name="edit_price">価格を編集</string>
     <string name="price_updated">価格を更新しました</string>
     <string name="all_prices_updated">すべての価格が更新されました。</string>
     <string name="download_complete">ダウンロードが完了しました。</string>

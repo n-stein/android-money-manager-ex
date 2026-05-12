@@ -435,7 +435,6 @@
     <string name="update_prices">Actualizează prețurile</string>
     <string name="update_price">Actualizează prețul</string>
     <string name="download_price">Descarcă prețul</string>
-    <string name="edit_price">Editează prețul</string>
     <string name="price_updated">Preț actualizat</string>
     <string name="all_prices_updated">Toate prețurile au fost actualizate.</string>
     <string name="download_complete">Descărcare completă.</string>

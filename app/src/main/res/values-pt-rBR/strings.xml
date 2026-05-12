@@ -503,7 +503,6 @@
     <string name="update_prices">Atualização de preços</string>
     <string name="update_price">Atualização de preço</string>
     <string name="download_price">Baixar o preço</string>
-    <string name="edit_price">Editar o preço</string>
     <string name="price_updated">Preço atualizado</string>
     <string name="all_prices_updated">Todos os preços foram atualizados.</string>
     <string name="download_complete">Download concluído.</string>

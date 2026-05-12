@@ -458,7 +458,6 @@
     <string name="update_prices">Opdatér priser</string>
     <string name="update_price">Opdatér pris</string>
     <string name="download_price">Hent pris</string>
-    <string name="edit_price">Rediger pris</string>
     <string name="price_updated">Pris opdateret</string>
     <string name="all_prices_updated">Alle priser er blevet opdateret.</string>
     <string name="download_complete">Download fuldført.</string>

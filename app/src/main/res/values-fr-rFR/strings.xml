@@ -481,7 +481,6 @@
     <string name="update_prices">Mise à jour des prix</string>
     <string name="update_price">Mise à jour du prix</string>
     <string name="download_price">Téléchargement des cours</string>
-    <string name="edit_price">Modifier le prix</string>
     <string name="price_updated">Prix mis à jour</string>
     <string name="all_prices_updated">Tous les prix ont été mis à jour.</string>
     <string name="download_complete">Téléchargement réussi.</string>

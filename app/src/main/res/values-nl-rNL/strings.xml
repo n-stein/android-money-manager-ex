@@ -516,7 +516,6 @@
     <string name="update_price">Prijs bijwerken</string>
     <string name="download_price">Prijs downloaden</string>
     <string name="download_all_prices">Download alle prijzen</string>
-    <string name="edit_price">Prijzen bewerken</string>
     <string name="price_history">Prijsgeschiedenis</string>
     <string name="download_prices">Download alle prijzen</string>
     <string name="download_prices_explanation">Selecteer de gewenste startdatum. De prijzen worden tot en met vandaag gedownload.</string>

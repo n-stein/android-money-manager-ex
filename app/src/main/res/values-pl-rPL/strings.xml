@@ -455,7 +455,6 @@
     <string name="update_prices">Zaktualizuj ceny</string>
     <string name="update_price">Zaktualizuj cenę</string>
     <string name="download_price">Pobierz cenę</string>
-    <string name="edit_price">Edytuj cenę</string>
     <string name="price_updated">Cena zaktualizowana</string>
     <string name="all_prices_updated">Wszystkie ceny zostały zaktualizowane.</string>
     <string name="download_complete">Zakończono pobieranie.</string>

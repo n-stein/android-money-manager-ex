@@ -205,8 +205,7 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         MenuHelper menuHelper = new MenuHelper(requireActivity(), menu);
         menu.add(Menu.NONE, ContextMenuIds.VIEW_TRANSACTIONS.getId(), Menu.NONE, R.string.view_transactions);
         menu.add(Menu.NONE, ContextMenuIds.OPEN_YAHOO_FINANCE.getId(), Menu.NONE, R.string.open_yahoo_finance);
-        menuHelper.addToContextMenu(ContextMenuIds.DownloadPrice);
-        menuHelper.addToContextMenu(ContextMenuIds.EditPrice);
+        menuHelper.addToContextMenu(ContextMenuIds.PriceHistory);
         menuHelper.addToContextMenu(ContextMenuIds.DELETE);
     }
 
@@ -222,11 +221,8 @@ public class PortfolioFragment extends BaseRecyclerFragment {
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DELETE) {
             showDeleteStockConfirmationDialog(selectedStock);
             return true;
-        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.EditPrice) {
+        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.PriceHistory) {
             openEditPriceActivity(selectedStock);
-            return true;
-        } else if (Objects.requireNonNull(menuId) == ContextMenuIds.DownloadPrice) {
-            viewModel.downloadStockPrice(selectedStock.getSymbol());
             return true;
         } else if (Objects.requireNonNull(menuId) == ContextMenuIds.OPEN_YAHOO_FINANCE) {
             openYahooFinance(selectedStock);

@@ -197,6 +197,82 @@ public class StockPriceRepository {
         return new SaveHistoryResult(savedCount, latestPrice);
     }
 
+    private SaveHistoryResult saveHistoryPricesForDate(String symbol, List<Long> timestamps,
+                                                       List<Double> prices, Date targetDate) {
+        int savedCount = 0;
+        Money latestPrice = null;
+
+        // Convert targetDate to midnight for day-level comparison
+        MmxDate targetDay = new MmxDate(targetDate);
+        String targetDateString = targetDay.toIsoDateString();
+
+        int size = Math.min(timestamps.size(), prices.size());
+        for (int i = 0; i < size; i++) {
+            Double price = prices.get(i);
+            if (price == null) {
+                continue;
+            }
+
+            Date date = new MmxDate(timestamps.get(i) * 1000L).toDate();
+            String priceDay = new MmxDate(date).toIsoDateString();
+
+            // Only save if the price date matches the target date
+            if (priceDay.equals(targetDateString)) {
+                Money moneyPrice = MoneyFactory.fromDouble(price);
+                stockHistoryRepository.addStockHistoryRecord(symbol, moneyPrice, date);
+                latestPrice = moneyPrice;
+                savedCount++;
+            }
+        }
+
+        return new SaveHistoryResult(savedCount, latestPrice);
+    }
+
+    public LiveData<Integer> downloadPriceForDate(String symbol, Date targetDate) {
+        MutableLiveData<Integer> liveData = new MutableLiveData<>();
+
+        // Download from target date to today to get the data
+        long period1 = targetDate.getTime() / 1000;
+        long period2 = new Date().getTime() / 1000;
+
+        yahooService.getChartDataForPeriod(symbol, period1, period2, "1d").enqueue(new Callback<YahooChartResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<YahooChartResponse> call, @NonNull Response<YahooChartResponse> response) {
+                YahooChartResponse.Result result = getValidHistoryResult(response.body());
+                if (result == null) {
+                    liveData.postValue(0);
+                    return;
+                }
+
+                try {
+                    SaveHistoryResult saveResult = saveHistoryPricesForDate(symbol, result.timestamps,
+                            result.indicators.quote.get(0).closePrices, targetDate);
+
+                    if (saveResult.latestPrice != null && isToday(targetDate)) {
+                        stockRepository.updateCurrentPrice(symbol, saveResult.latestPrice);
+                    }
+
+                    liveData.postValue(saveResult.savedCount);
+                } catch (Exception e) {
+                    Timber.e(e, "Error storing historical stock price");
+                    liveData.postValue(0);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<YahooChartResponse> call, @NonNull Throwable t) {
+                Timber.e(t, "Error fetching historical stock price");
+                liveData.postValue(-1);
+            }
+        });
+
+        return liveData;
+    }
+
+    private boolean isToday(Date date) {
+        return new MmxDate(date).toIsoDateString().equals(new MmxDate().toIsoDateString());
+    }
+
     private static final class SaveHistoryResult {
         private final int savedCount;
         private final Money latestPrice;

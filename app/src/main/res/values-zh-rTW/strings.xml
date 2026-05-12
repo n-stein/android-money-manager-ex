@@ -435,7 +435,6 @@
     <string name="update_prices">更新價格</string>
     <string name="update_price">更新價格</string>
     <string name="download_price">下載價格</string>
-    <string name="edit_price">編輯價格</string>
     <string name="price_updated">價格已更新</string>
     <string name="all_prices_updated">所有價格都已更新。</string>
     <string name="download_complete">下載完成。</string>

@@ -507,7 +507,6 @@
     <string name="update_price">Обновление цен</string>
     <string name="download_price">Скачать цену</string>
     <string name="download_all_prices">Скачать все цены</string>
-    <string name="edit_price">Редактировать цену</string>
     <string name="price_updated">Цены обновлены</string>
     <string name="all_prices_updated">Все цены обновлены.</string>
     <string name="download_complete">Загрузка завершена.</string>

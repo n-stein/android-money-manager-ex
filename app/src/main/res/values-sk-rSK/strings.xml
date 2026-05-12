@@ -433,7 +433,6 @@
     <string name="update_prices">Aktualizovať ceny</string>
     <string name="update_price">Aktualizovať cenu</string>
     <string name="download_price">Stiahnuť cenu</string>
-    <string name="edit_price">Upraviť cenu</string>
     <string name="price_updated">Cena aktualizovaná</string>
     <string name="all_prices_updated">Všetky ceny boli aktualizované.</string>
     <string name="download_complete">Sťahovanie dokončené.</string>

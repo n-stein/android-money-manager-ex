@@ -503,7 +503,6 @@
     <string name="update_prices">Árak frissítése</string>
     <string name="update_price">Ár frissítése</string>
     <string name="download_price">Ár letöltése</string>
-    <string name="edit_price">Ár szerkesztése</string>
     <string name="price_updated">Ár frissítve</string>
     <string name="all_prices_updated">Minden ár frissítve.</string>
     <string name="download_complete">Letöltés befejeződött.</string>
