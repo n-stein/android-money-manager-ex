@@ -92,6 +92,7 @@
     <string name="cash_balance">Kontostand</string>
     <string name="market_value">Marktwert</string>
     <string name="invested">Investiert</string>
+    <string name="total_cost">Gesamtkosten</string>
     <string name="gain_loss">Gewinn / Verlust</string>
     <string name="unrealized_gain_loss">Nicht realisierter G/V</string>
     <string name="realized_gain_loss">Realisierter G/V</string>
@@ -325,6 +326,9 @@
     <string name="menu_report_income_vs_expenses">Einnahmen vs Ausgaben</string>
     <string name="menu_report_cashflow">Geldfluss</string>
     <string name="menu_report_summary_of_accounts">Kontenübersicht</string>
+    <string name="menu_report_summary_of_stocks">Wertpapierübersicht</string>
+    <string name="report_subtotal">Zwischensumme</string>
+    <string name="report_grand_total">Gesamtsumme</string>
     <string name="total">Gesamt</string>
     <!--<string name="option">Option</string>-->
     <string name="all_time">Gesamter Zeitraum</string>
