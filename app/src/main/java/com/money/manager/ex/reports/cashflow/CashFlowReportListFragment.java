@@ -38,6 +38,7 @@ import com.github.mikephil.charting.components.LimitLine;
 import com.github.mikephil.charting.data.Entry;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.LineData;
@@ -328,6 +329,8 @@ public class CashFlowReportListFragment
             //Update the value background thread to UI thread
             Handler mHandler = new Handler(Looper.getMainLooper());
             mHandler.post(() -> {
+                if (getActivity() == null) return;
+
                 // here you can update ui
                 if (matrixCursor.getCount() == 0) {
                     setEmptyText(getActivity().getResources().getString(R.string.no_recurring_transaction));
@@ -626,7 +629,11 @@ public class CashFlowReportListFragment
 //        });
 
         // disable dual axis (only use LEFT axis)
-        chart = getActivity().findViewById(R.id.chartLine);
+        FragmentActivity activity = getActivity();
+        if (activity == null) return;
+        chart = activity.findViewById(R.id.chartLine);
+        if (chart == null) return;
+
         chart.getAxisRight().setEnabled(false);
         chart.getXAxis().setDrawGridLines(false);
         for( int i = 0; i < xVal.size(); i++ ) {
