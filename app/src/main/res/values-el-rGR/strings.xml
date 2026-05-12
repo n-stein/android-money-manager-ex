@@ -435,7 +435,6 @@
     <string name="update_prices">Ενημέρωση των τιμών</string>
     <string name="update_price">Ενημέρωση τιμών</string>
     <string name="download_price">Κάντε λήψη της τιμής</string>
-    <string name="edit_price">Επεξεργασία Τιμής</string>
     <string name="price_updated">Η τιμή ενημερώνεται</string>
     <string name="all_prices_updated">Όλες οι τιμές έχουν ενημερωθεί.</string>
     <string name="download_complete">Η λήψη ολοκληρώθηκε.</string>

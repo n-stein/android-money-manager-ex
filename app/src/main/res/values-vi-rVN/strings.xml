@@ -485,7 +485,6 @@
     <string name="update_prices">Cập nhật giá</string>
     <string name="update_price">Cập nhật giá</string>
     <string name="download_price">Tải về giá</string>
-    <string name="edit_price">Chỉnh sửa giá</string>
     <string name="price_updated">Giá đã cập nhật</string>
     <string name="all_prices_updated">Tất cả giá đã được cập nhật.</string>
     <string name="download_complete">Tải xuống hoàn tất.</string>

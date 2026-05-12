@@ -522,7 +522,6 @@
     <string name="update_price">Preis aktualisieren</string>
     <string name="download_price">Preis herunterladen</string>
     <string name="download_all_prices">Alle Preise herunterladen</string>
-    <string name="edit_price">Preis bearbeiten</string>
     <string name="price_history">Kursverlauf</string>
     <string name="download_prices">Alle Preise herunterladen</string>
     <string name="download_prices_explanation">Bitte wählen Sie das Startdatum. Die Preise werden bis heute heruntergeladen.</string>

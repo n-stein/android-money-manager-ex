@@ -498,7 +498,6 @@
     <string name="update_prices">Update prices</string>
     <string name="update_price">Update price</string>
     <string name="download_price">Download price</string>
-    <string name="edit_price">Edit price</string>
     <string name="price_updated">Price updated</string>
     <string name="all_prices_updated">All prices have been updated.</string>
     <string name="download_complete">Download complete.</string>

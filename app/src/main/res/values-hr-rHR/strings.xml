@@ -507,7 +507,6 @@
     <string name="update_price">Aktualiziraj cijenu</string>
     <string name="download_price">Preuzimi cijenu</string>
     <string name="download_all_prices">Preuzimi sve cijene</string>
-    <string name="edit_price">Uredi cijenu</string>
     <string name="price_updated">Cijena je aktualizirana</string>
     <string name="all_prices_updated">Sve cijene su aktualizirane.</string>
     <string name="download_complete">Preuzimanje je završeno.</string>

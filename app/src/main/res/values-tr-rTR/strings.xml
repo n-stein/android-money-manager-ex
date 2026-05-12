@@ -467,7 +467,6 @@
     <string name="update_prices">Fiyatları güncelleştir</string>
     <string name="update_price">Fiyatı güncelleştir</string>
     <string name="download_price">Fiyat indir</string>
-    <string name="edit_price">Fiyatı düzenle</string>
     <string name="price_updated">Fiyat güncellendi</string>
     <string name="all_prices_updated">Bütün fiyatlar güncellendi.</string>
     <string name="download_complete">İndirme tamamlandı.</string>

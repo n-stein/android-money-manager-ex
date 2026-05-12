@@ -435,7 +435,6 @@
     <string name="update_prices">Perbarui harga</string>
     <string name="update_price">Perbarui harga</string>
     <string name="download_price">Mengunduh harga</string>
-    <string name="edit_price">Mengubah harga</string>
     <string name="price_updated">Harga Diperbarui</string>
     <string name="all_prices_updated">Semua harga telah diperbarui.</string>
     <string name="download_complete">Unduhan selesai.</string>

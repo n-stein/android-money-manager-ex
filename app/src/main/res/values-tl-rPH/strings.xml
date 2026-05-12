@@ -435,7 +435,6 @@
     <string name="update_prices">I-update ang mga presyo</string>
     <string name="update_price">I-update ang presyo</string>
     <string name="download_price">I-download ang presyo</string>
-    <string name="edit_price">I-edit ang presyo</string>
     <string name="price_updated">Na-update na ang presyo</string>
     <string name="all_prices_updated">Na-update na ang lahat ng presyo.</string>
     <string name="download_complete">Kompleto na ang download.</string>

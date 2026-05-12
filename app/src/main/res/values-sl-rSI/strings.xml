@@ -452,7 +452,6 @@
     <string name="qif_export">Qif izvoz</string>
     <string name="update_prices">Posodobi cene</string>
     <string name="update_price">Posodobi ceno</string>
-    <string name="edit_price">Uredi ceno</string>
     <string name="price_updated">Cena posodobljena</string>
     <string name="all_prices_updated">Vse cene posodobljene</string>
     <string name="download_complete">Prenos dokončan</string>

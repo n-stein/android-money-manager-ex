@@ -444,7 +444,6 @@ Toque para marcar a transação como atrasada</string>
     <string name="update_prices">Actualizar preços</string>
     <string name="update_price">Actualizar preço</string>
     <string name="download_price">Baixar o preço</string>
-    <string name="edit_price">Editar o preço</string>
     <string name="price_updated">Preço actualizado</string>
     <string name="all_prices_updated">Todos os preços foram actualizados.</string>
     <string name="download_complete">Transferência concluída.</string>

@@ -503,7 +503,6 @@
     <string name="update_prices">更新价格</string>
     <string name="update_price">更新价格</string>
     <string name="download_price">下载价格</string>
-    <string name="edit_price">编辑价格</string>
     <string name="price_updated">价格已更新</string>
     <string name="all_prices_updated">所有价格均已更新。</string>
     <string name="download_complete">下载已完成</string>

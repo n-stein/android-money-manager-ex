@@ -590,8 +590,11 @@
     <string name="update_price">Update price</string>
     <string name="download_price">Download price</string>
     <string name="download_all_prices">Download all prices</string>
-    <string name="edit_price">Edit price</string>
+    <string name="download_price_selected_date">Download price for selected date</string>
+    <string name="download_price_history_range">Download price history for date range</string>
+    <string name="download_for_date_range">Download for date range</string>
     <string name="price_history">Price History</string>
+    <string name="stock_name">Stock name</string>
     <string name="download_prices">Download Prices</string>
     <string name="download_prices_explanation">Please select the start date. Prices will be downloaded up to today.</string>
     <string name="no_price_history">No price history available</string>
@@ -680,7 +683,6 @@
 
     <!-- edit investment transaction -->
     <string name="purchase_date">Purchase Date</string>
-    <string name="stock_name">Stock Name</string>
     <string name="symbol">Symbol</string>
     <string name="number_of_shares">Number of Shares</string>
     <string name="purchase_price">Purchase Price</string>

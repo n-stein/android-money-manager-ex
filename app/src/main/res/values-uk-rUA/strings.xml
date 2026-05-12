@@ -459,7 +459,6 @@
     <string name="update_prices">Оновлення цін</string>
     <string name="update_price">Оновлення ціни</string>
     <string name="download_price">Завантажити ціни</string>
-    <string name="edit_price">Редагувати ціни</string>
     <string name="price_updated">Ціну оновлено</string>
     <string name="all_prices_updated">Всі ціни були поновлені.</string>
     <string name="download_complete">Завантаження завершено.</string>
