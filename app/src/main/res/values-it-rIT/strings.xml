@@ -588,7 +588,6 @@
     <string name="watchlist">Da vedere</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Data di acquisto</string>
-    <string name="stock_name">Nome Azione</string>
     <string name="symbol">Simbolo</string>
     <string name="number_of_shares">Numero di azioni</string>
     <string name="purchase_price">Prezzo d\'acquisto</string>

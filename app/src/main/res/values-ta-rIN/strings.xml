@@ -583,7 +583,6 @@
     <string name="watchlist">கண்காணிப்பு பட்டியல்</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">கொள்முதல் தேதி</string>
-    <string name="stock_name">பங்கு பெயர்</string>
     <string name="symbol">சின்னம்</string>
     <string name="number_of_shares">பங்குகளின் எண்ணிக்கை</string>
     <string name="purchase_price">கொள்முதல் விலை</string>

@@ -536,7 +536,6 @@
     <string name="watchlist">Overvågningsliste</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Købsdato</string>
-    <string name="stock_name">Aktienavn</string>
     <string name="symbol">Symbol</string>
     <string name="number_of_shares">Antal aktier</string>
     <string name="purchase_price">Købspris</string>

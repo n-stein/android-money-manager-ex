@@ -507,7 +507,6 @@
     <string name="watchlist">Watchlist</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Petsa ng Pagbili</string>
-    <string name="stock_name">Pangalan ng Stock</string>
     <string name="symbol">Simbolo</string>
     <string name="number_of_shares">Bilang ng mga namamahagi</string>
     <string name="purchase_price">Presyo ng pagbili</string>

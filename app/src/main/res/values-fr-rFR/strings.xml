@@ -553,7 +553,6 @@
     <string name="watchlist">Liste de suivi</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Date d\'achat</string>
-    <string name="stock_name">Nom de stock</string>
     <string name="symbol">Symbole</string>
     <string name="number_of_shares">Nombre d\'actions</string>
     <string name="purchase_price">Prix d\'achat</string>

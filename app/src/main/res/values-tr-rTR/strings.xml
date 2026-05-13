@@ -545,7 +545,6 @@
     <string name="watchlist">İzleme Listesi</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Satın Alma Tarihi</string>
-    <string name="stock_name">Stok Adı</string>
     <string name="symbol">Sembol</string>
     <string name="number_of_shares">Paylaşım Sayısı</string>
     <string name="purchase_price">Satın Alma Fiyatı</string>

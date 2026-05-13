@@ -504,7 +504,6 @@
     <string name="watchlist">Sledované</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Dátum nákupu</string>
-    <string name="stock_name">Názov burzy</string>
     <string name="symbol">Znak</string>
     <string name="number_of_shares">Počet zdieľaní</string>
     <string name="purchase_price">Kúpna cena</string>

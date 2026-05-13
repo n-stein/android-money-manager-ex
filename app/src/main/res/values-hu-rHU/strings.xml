@@ -583,7 +583,6 @@
     <string name="watchlist">Figyelőlista</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Vásárlás dátuma</string>
-    <string name="stock_name">Készlet neve</string>
     <string name="symbol">Szimbólum</string>
     <string name="number_of_shares">Részvények száma</string>
     <string name="purchase_price">Vételár</string>

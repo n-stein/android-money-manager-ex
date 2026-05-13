@@ -507,7 +507,6 @@
     <string name="watchlist">دیکھنی والی فہرست</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">خریداری کی تاریخ</string>
-    <string name="stock_name">اسٹاک نام</string>
     <string name="symbol">علامت</string>
     <string name="number_of_shares">حصص کی تعداد</string>
     <string name="purchase_price">قیمت خرید</string>

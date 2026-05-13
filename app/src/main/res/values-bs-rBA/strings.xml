@@ -507,7 +507,6 @@
     <string name="watchlist">Pregled</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Datum kupovine</string>
-    <string name="stock_name">Naziv dionica</string>
     <string name="symbol">Simbol</string>
     <string name="number_of_shares">Broj dionica</string>
     <string name="purchase_price">Kupovna cijena</string>
