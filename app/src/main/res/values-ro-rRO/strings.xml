@@ -507,7 +507,6 @@
     <string name="watchlist">Pagini urmărite</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Data achiziției</string>
-    <string name="stock_name">Numele acțiunii</string>
     <string name="symbol">Simbol</string>
     <string name="number_of_shares">Număr de acțiuni</string>
     <string name="purchase_price">Preț de cumpărare</string>

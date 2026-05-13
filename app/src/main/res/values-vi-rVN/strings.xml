@@ -557,7 +557,6 @@
     <string name="watchlist">Danh sách theo dõi</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Ngày mua</string>
-    <string name="stock_name">Tên chứng khoán</string>
     <string name="symbol">Biểu tượng</string>
     <string name="number_of_shares">Số cổ phần</string>
     <string name="purchase_price">Giá mua</string>

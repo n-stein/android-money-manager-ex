@@ -507,7 +507,6 @@
     <string name="watchlist">Daftar pantauan</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Tanggal Pembelian</string>
-    <string name="stock_name">Nama saham</string>
     <string name="symbol">Simbol</string>
     <string name="number_of_shares">Jumlah dibagikan</string>
     <string name="purchase_price">Harga pembelian</string>

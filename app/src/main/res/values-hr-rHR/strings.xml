@@ -589,7 +589,6 @@
     <string name="watchlist">Popis praćenja</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Datum kupnje</string>
-    <string name="stock_name">Naziv dionice</string>
     <string name="symbol">Oznaka</string>
     <string name="number_of_shares">Broj dionica</string>
     <string name="purchase_price">Nabavna cijena</string>

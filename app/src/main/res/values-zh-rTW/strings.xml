@@ -507,7 +507,6 @@
     <string name="watchlist">觀察名單</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">購買日期</string>
-    <string name="stock_name">股票名稱</string>
     <string name="symbol">符號</string>
     <string name="number_of_shares">股份數目</string>
     <string name="purchase_price">購買價格</string>

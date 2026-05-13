@@ -507,7 +507,6 @@
     <string name="watchlist">ウォッチリスト</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">購入日</string>
-    <string name="stock_name">銘柄名</string>
     <string name="symbol">シンボル</string>
     <string name="number_of_shares">株式の数</string>
     <string name="purchase_price">購入価格</string>

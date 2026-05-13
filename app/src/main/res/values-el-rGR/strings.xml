@@ -507,7 +507,6 @@
     <string name="watchlist">Λίστα παρακολούθησης</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Ημερομηνία αγοράς</string>
-    <string name="stock_name">Όνομα αποθεμάτων</string>
     <string name="symbol">Σύμβολο</string>
     <string name="number_of_shares">Αριθμός μετοχών</string>
     <string name="purchase_price">Τιμή αγοράς</string>

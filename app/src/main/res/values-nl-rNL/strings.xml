@@ -603,7 +603,6 @@
     <string name="watchlist">Volglijst</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Aankoopdatum</string>
-    <string name="stock_name">Effectennaam</string>
     <string name="symbol">Symbool</string>
     <string name="number_of_shares">Aantal aandelen</string>
     <string name="purchase_price">Aankoopbedrag</string>

@@ -537,7 +537,6 @@
     <string name="watchlist">Список перегляду</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Дата придбання</string>
-    <string name="stock_name">Назва фонду</string>
     <string name="symbol">Символ</string>
     <string name="number_of_shares">Кількість акцій</string>
     <string name="purchase_price">Ціна купівлі</string>

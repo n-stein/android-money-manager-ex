@@ -507,7 +507,6 @@
     <string name="watchlist">רשימת מעקב</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">תאריך הרכישה</string>
-    <string name="stock_name">שם המניה</string>
     <string name="symbol">סמל</string>
     <string name="number_of_shares">מספר מניות</string>
     <string name="purchase_price">מחיר הרכישה</string>
