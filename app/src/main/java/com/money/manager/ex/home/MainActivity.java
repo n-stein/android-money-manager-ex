@@ -620,9 +620,7 @@ public class MainActivity
 
         long itemId = item.getId();
 
-        if (itemId == R.id.menu_report_summary_of_stocks) {
-            startActivity(new Intent(this, SummaryOfStocksReportActivity.class));
-        } else if (itemId == R.id.menu_home) {
+        if (itemId == R.id.menu_home) {
             initHomeFragment();
         } else if (itemId == R.id.menu_sync) {
             SyncManager sync = new SyncManager(this);
