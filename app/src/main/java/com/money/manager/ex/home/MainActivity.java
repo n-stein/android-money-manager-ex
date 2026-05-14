@@ -637,6 +637,8 @@ public class MainActivity
             (new FileStorageHelper(this)).showCreateFilePicker();
             // TODO request password 3/3
         } else if (itemId == R.id.menu_account) {
+            showFragment(AccountListFragment.class);
+        } else if (itemId == R.id.menu_category) {
             showFragment(NestedCategoryListFragment.class);
         } else if (itemId == R.id.menu_currency) {
             Intent intent = new Intent(MainActivity.this, CurrencyListActivity.class);
