@@ -226,7 +226,6 @@
     <string name="favourite">Lemmik</string>
     <!-- budgets -->
     <string name="add_budget">Lisa eelarve</string>
-    <!-- string name="copy">Copy</string -->
     <string name="print">Prindi</string>
     <!-- Currencies -->
     <string name="currencies">Valuutad</string>
@@ -266,7 +265,7 @@
     <!-- Builder button -->
     <!--- New navigation mode -->
     <!--Upload/Downlaod warnning -->
-    <string name="menu_cashflow_all">Kõik kontod</string>
+    <string name="menu_account_filter_all">Kõik kontod</string>
     <!-- Merge -->
     <!-- Error Handling -->
     <!-- changelog -->

@@ -108,17 +108,22 @@ public class SearchActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-
-            case R.id.searchMenuItem:
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.searchMenuItem) {
+            // In single-panel mode, report drill-down opens directly on results.
+            // If parameters are not visible, bring the form back instead of reloading the same query.
+            if (!mIsDualPanel && !isSearchParametersVisible() &&
+                    getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStackImmediate();
+            } else {
                 performSearch();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -170,6 +175,11 @@ public class SearchActivity
         SearchParametersFragment searchParametersFragment = getSearchFragment();
         String where = searchParametersFragment.getWhereStatement();
         showSearchResultsFragment(where);
+    }
+
+    private boolean isSearchParametersVisible() {
+        SearchParametersFragment searchParametersFragment = getSearchFragment();
+        return searchParametersFragment != null && searchParametersFragment.isVisible();
     }
 
     private void showSearchResultsFragment(String where) {

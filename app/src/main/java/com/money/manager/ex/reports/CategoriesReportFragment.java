@@ -72,9 +72,6 @@ public class CategoriesReportFragment
         setListAdapter(null);
         setSearchMenuVisible(true);
 
-        // disable fab issue #2504
-        setFabVisible(false);
-
         //create header view
         LinearLayout mListViewHeader = (LinearLayout) addListViewHeaderFooter(R.layout.item_generic_report_2_columns);
         TextView txtColumn1 = mListViewHeader.findViewById(R.id.textViewColumn1);
@@ -240,7 +237,14 @@ public class CategoriesReportFragment
 // ignore Stock Movement
                 " AND " +
                 QueryMobileData.ACCOUNTTYPE + "<>'"+ AccountTypes.SHARES.toString()  +"' AND " +
-                QueryMobileData.TOACCOUNTTYPE + "<>'"+ AccountTypes.SHARES.toString() +"'" ;
+                QueryMobileData.TOACCOUNTTYPE + "<>'"+ AccountTypes.SHARES.toString() +"'" +
+                " AND " + QueryMobileData.ID + " NOT IN (" +
+                "SELECT CHECKINGACCOUNTID FROM TRANSLINK_V1 WHERE LOWER(LINKTYPE)='stock' " +
+                "UNION SELECT CHECKINGACCOUNTID FROM SHAREINFO_V1)";
+        String accountFilterSelection = getAccountFilterSelection(QueryMobileData.ACCOUNTID);
+        if (!TextUtils.isEmpty(accountFilterSelection)) {
+            selection += " AND " + accountFilterSelection;
+        }
         if (!TextUtils.isEmpty(whereClause)) {
             selection += " AND " + whereClause;
         }
@@ -300,6 +304,7 @@ public class CategoriesReportFragment
         parameters.category = category;
         parameters.dateFrom = mDateFrom;
         parameters.dateTo = mDateTo;
+        parameters.accountFilterWhere = getAccountFilterSelection(QueryMobileData.ACCOUNTID);
 
         showSearchActivityFor(parameters);
     }

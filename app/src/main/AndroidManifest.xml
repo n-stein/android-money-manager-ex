@@ -62,6 +62,7 @@
         android:supportsRtl="true">
 
         <activity android:name=".reports.GeneralReportActivity" />
+        <activity android:name=".reports.SummaryOfStocksReportActivity" />
 
         <meta-data
             android:name="com.google.android.backup.api_key"
@@ -290,6 +291,12 @@
             android:name=".reports.CategoriesReportActivity"
             android:label="@string/category" />
         <activity
+            android:name=".reports.SummaryOfAccountsReportActivity"
+            android:label="@string/menu_report_summary_of_accounts" />
+        <activity
+            android:name=".reports.SummaryOfAccountsChartActivity"
+            android:label="@string/menu_report_summary_of_accounts" />
+        <activity
                 android:name=".settings.SyncPreferencesActivity"
                 android:label="@string/synchronization"
                 android:launchMode="singleTask" android:exported="true">
@@ -341,6 +348,9 @@
         <activity
             android:name=".investment.InvestmentTransactionEditActivity"
             android:label="@string/investment" />
+        <activity
+            android:name=".investment.StockTransactionListActivity"
+            android:label="@string/transactions" />
         <activity
             android:name=".common.WebViewActivity"
             android:label="@string/donate" />

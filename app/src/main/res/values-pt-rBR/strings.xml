@@ -503,7 +503,6 @@
     <string name="update_prices">Atualização de preços</string>
     <string name="update_price">Atualização de preço</string>
     <string name="download_price">Baixar o preço</string>
-    <string name="edit_price">Editar o preço</string>
     <string name="price_updated">Preço atualizado</string>
     <string name="all_prices_updated">Todos os preços foram atualizados.</string>
     <string name="download_complete">Download concluído.</string>
@@ -584,7 +583,6 @@
     <string name="watchlist">Lista de observação</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Data de compra</string>
-    <string name="stock_name">Nome de estoque</string>
     <string name="symbol">Símbolo</string>
     <string name="number_of_shares">Número de acções</string>
     <string name="purchase_price">Preço de compra</string>
@@ -642,7 +640,6 @@
     <string name="budget_year">Orçamento Anual</string>
     <string name="budget_month">Orçamento mensal</string>
     <string name="budget_month_optional">Orçamento do Mês (opcional)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">O aplicativo será fechado para aplicar todas as alterações. Por favor reinicie.</string>
     <string name="print">Imprimir</string>
     <string name="min_19">Você precisa ter pelo menos a versão 4.4 do Android para imprimir o documento.</string>
@@ -801,10 +798,7 @@
     <string name="local_file_change">Indicador de alterações no arquivo local: </string>
     <string name="msg_uploading_overwrite">Fazer uploading irá substituir a sua versão remota.\nVocê quer continuar?</string>
     <string name="msg_downloading_overwrite">Baixando irá substituir a sua versão local.\nDeseja continuar?</string>
-    <string name="menu_cashflow_all">Todas as contas</string>
-    <string name="menu_cashflow_open">Contas Abertas</string>
-    <string name="menu_cashflow_favorite">Contas Favoritas</string>
-    <string name="menu_cashflow_custom">Selecionar Contas&#8230;</string>
+    <string name="menu_account_filter_all">Todas as contas</string>
     <string name="cash_ledger">Contabilidade de Caixa</string>
     <!-- Merge -->
     <string name="merge_take_ours">Deixar local</string>

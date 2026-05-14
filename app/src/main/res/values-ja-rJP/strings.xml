@@ -435,7 +435,6 @@
     <string name="update_prices">価格の更新</string>
     <string name="update_price">価格の更新</string>
     <string name="download_price">ダウンロード価格</string>
-    <string name="edit_price">価格を編集</string>
     <string name="price_updated">価格を更新しました</string>
     <string name="all_prices_updated">すべての価格が更新されました。</string>
     <string name="download_complete">ダウンロードが完了しました。</string>
@@ -508,7 +507,6 @@
     <string name="watchlist">ウォッチリスト</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">購入日</string>
-    <string name="stock_name">銘柄名</string>
     <string name="symbol">シンボル</string>
     <string name="number_of_shares">株式の数</string>
     <string name="purchase_price">購入価格</string>
@@ -561,7 +559,6 @@
     <string name="budget_name">予算名</string>
     <string name="budget_year">予算年度</string>
     <string name="budget_month">予算月</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">変更を適用するためアプリを閉じます。再起動してください。</string>
     <string name="print">印刷</string>
     <string name="min_19">文書を印刷するには、少なくとも Android 4.4 が必要です。</string>
@@ -675,7 +672,7 @@
     <!-- Builder button -->
     <!--- New navigation mode -->
     <!--Upload/Downlaod warnning -->
-    <string name="menu_cashflow_all">すべての口座</string>
+    <string name="menu_account_filter_all">すべての口座</string>
     <!-- Merge -->
     <!-- Error Handling -->
     <!-- changelog -->

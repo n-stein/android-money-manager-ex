@@ -503,7 +503,6 @@
     <string name="update_prices">Árak frissítése</string>
     <string name="update_price">Ár frissítése</string>
     <string name="download_price">Ár letöltése</string>
-    <string name="edit_price">Ár szerkesztése</string>
     <string name="price_updated">Ár frissítve</string>
     <string name="all_prices_updated">Minden ár frissítve.</string>
     <string name="download_complete">Letöltés befejeződött.</string>
@@ -584,7 +583,6 @@
     <string name="watchlist">Figyelőlista</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Vásárlás dátuma</string>
-    <string name="stock_name">Készlet neve</string>
     <string name="symbol">Szimbólum</string>
     <string name="number_of_shares">Részvények száma</string>
     <string name="purchase_price">Vételár</string>
@@ -642,7 +640,6 @@
     <string name="budget_year">Költségvetés év</string>
     <string name="budget_month">Költségvetés hónap</string>
     <string name="budget_month_optional">Költségvetési hónap (nem kötelező)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Az alkalmazás most bezárul a módosítások alkalmazásához. Kérjük, indítsa újra.</string>
     <string name="print">Nyomtatás</string>
     <string name="min_19">A dokumentum kinyomtatásához legalább Android 4.4-es verzióra van szüksége.</string>
@@ -801,10 +798,7 @@
     <string name="local_file_change">Helyi fájlváltozások jelzője: </string>
     <string name="msg_uploading_overwrite">A feltöltés felülírja a távoli verziót.\nFolytatja?</string>
     <string name="msg_downloading_overwrite">A letöltés felülírja a helyi verziót.\nFolytatja?</string>
-    <string name="menu_cashflow_all">Minden számla</string>
-    <string name="menu_cashflow_open">Nyitott számlák</string>
-    <string name="menu_cashflow_favorite">Kedvenc számlák</string>
-    <string name="menu_cashflow_custom">Számlák kijelölése&#8230;</string>
+    <string name="menu_account_filter_all">Minden számla</string>
     <string name="cash_ledger">Készpénzes főkönyv</string>
     <!-- Merge -->
     <string name="merge_take_ours">Helyi megőrzés</string>

@@ -455,7 +455,6 @@
     <string name="update_prices">Zaktualizuj ceny</string>
     <string name="update_price">Zaktualizuj cenę</string>
     <string name="download_price">Pobierz cenę</string>
-    <string name="edit_price">Edytuj cenę</string>
     <string name="price_updated">Cena zaktualizowana</string>
     <string name="all_prices_updated">Wszystkie ceny zostały zaktualizowane.</string>
     <string name="download_complete">Zakończono pobieranie.</string>
@@ -536,7 +535,6 @@
     <string name="watchlist">Lista obserwowanych</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Data Zakupu</string>
-    <string name="stock_name">Nazwa akcji</string>
     <string name="symbol">Symbol</string>
     <string name="number_of_shares">Liczba akcji</string>
     <string name="purchase_price">Cena zakupu</string>
@@ -594,7 +592,6 @@
     <string name="budget_year">Rok budżetu</string>
     <string name="budget_month">Miesiąc budżetu</string>
     <string name="budget_month_optional">Budżet Miesieczny (opcjonalnie)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">Aplikacja zostanie zamknięta w celu zastosowania zmian. Proszę uruchomić ją ponownie.</string>
     <string name="print">Drukuj</string>
     <string name="min_19">Potrzebujesz systemu Android w wersji co najmniej 4.4, aby móc wydrukować ten dokument.</string>
@@ -751,10 +748,7 @@
     <string name="local_file_change">Zdalny wskaźnik zmian pliku: </string>
     <string name="msg_uploading_overwrite">Przesyłanie nadpisze twoją zdalną wersję.\nCzy chcesz kontynuować?</string>
     <string name="msg_downloading_overwrite">Pobieranie nadpisze twoją zdalną wersję.\nCzy chcesz kontynuować?</string>
-    <string name="menu_cashflow_all">Wszystkie konta</string>
-    <string name="menu_cashflow_open">Otwarte Konta</string>
-    <string name="menu_cashflow_favorite">Ulubione konta</string>
-    <string name="menu_cashflow_custom">Wybierz konta</string>
+    <string name="menu_account_filter_all">Wszystkie konta</string>
     <string name="cash_ledger">Księga kasowa</string>
     <!-- Merge -->
     <string name="merge_take_ours">Przechowuj lokalnie</string>

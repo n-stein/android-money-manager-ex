@@ -444,7 +444,6 @@ Toque para marcar a transação como atrasada</string>
     <string name="update_prices">Actualizar preços</string>
     <string name="update_price">Actualizar preço</string>
     <string name="download_price">Baixar o preço</string>
-    <string name="edit_price">Editar o preço</string>
     <string name="price_updated">Preço actualizado</string>
     <string name="all_prices_updated">Todos os preços foram actualizados.</string>
     <string name="download_complete">Transferência concluída.</string>
@@ -517,7 +516,6 @@ Toque para marcar a transação como atrasada</string>
     <string name="watchlist">Watchlist</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">Data de Compra</string>
-    <string name="stock_name">Nome da ação</string>
     <string name="symbol">Símbolo</string>
     <string name="number_of_shares">Número de Ações</string>
     <string name="purchase_price">Preço de Compra</string>
@@ -570,7 +568,6 @@ Toque para marcar a transação como atrasada</string>
     <string name="budget_name">Nome do orçamento</string>
     <string name="budget_year">Orçamento anual</string>
     <string name="budget_month">Orçamento mensal</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">O app vai fechar para aplicar as alterações. Por favor reinicie.</string>
     <string name="print">Imprimir</string>
     <string name="min_19">Precisa de ter pelo menos o Android 4.4 para poder imprimir o documento.</string>
@@ -684,7 +681,7 @@ Toque para marcar a transação como atrasada</string>
     <!-- Builder button -->
     <!--- New navigation mode -->
     <!--Upload/Downlaod warnning -->
-    <string name="menu_cashflow_all">Todas as Contas</string>
+    <string name="menu_account_filter_all">Todas as Contas</string>
     <!-- Merge -->
     <!-- Error Handling -->
     <!-- changelog -->

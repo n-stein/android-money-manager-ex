@@ -503,7 +503,6 @@
     <string name="update_prices">விலைகளைப் புதுப்பிக்கவும்</string>
     <string name="update_price">விலையைப் புதுப்பிக்கவும்</string>
     <string name="download_price">பதிவிறக்க விலை</string>
-    <string name="edit_price">விலையைத் திருத்தவும்</string>
     <string name="price_updated">விலை புதுப்பிக்கப்பட்டது</string>
     <string name="all_prices_updated">அனைத்து விலைகளும் புதுப்பிக்கப்பட்டுள்ளன.</string>
     <string name="download_complete">பதிவிறக்கம் முடிந்தது.</string>
@@ -584,7 +583,6 @@
     <string name="watchlist">கண்காணிப்பு பட்டியல்</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">கொள்முதல் தேதி</string>
-    <string name="stock_name">பங்கு பெயர்</string>
     <string name="symbol">சின்னம்</string>
     <string name="number_of_shares">பங்குகளின் எண்ணிக்கை</string>
     <string name="purchase_price">கொள்முதல் விலை</string>
@@ -642,7 +640,6 @@
     <string name="budget_year">பட்ஜெட் ஆண்டு</string>
     <string name="budget_month">பட்ஜெட் மாதம்</string>
     <string name="budget_month_optional">பட்ஜெட் மாதம் (கட்டாயமற்ற)</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">மாற்றங்களைப் பயன்படுத்த, பயன்பாடு இப்போது மூடப்படும். தயவுசெய்து மீண்டும் தொடங்கவும்.</string>
     <string name="print">அச்சிடுக</string>
     <string name="min_19">ஆவணத்தை அச்சிடுவதற்கு உங்களுக்கு குறைந்தபட்சம் Android 4.4 தேவை.</string>
@@ -799,10 +796,7 @@
     <string name="local_file_change">உள்ளூர் கோப்பு மாற்றங்கள் காட்டி:</string>
     <string name="msg_uploading_overwrite">பதிவேற்றினால் உங்கள் தொலைநிலைப் பதிப்பு மேலெழுதப்படும்.\nதொடர விரும்புகிறீர்களா?</string>
     <string name="msg_downloading_overwrite">பதிவிறக்குவது உங்கள் உள்ளூர் பதிப்பை மேலெழுதும்.\nதொடர விரும்புகிறீர்களா?</string>
-    <string name="menu_cashflow_all">அனைத்து கணக்குகளும்</string>
-    <string name="menu_cashflow_open">திறந்த கணக்குகள்</string>
-    <string name="menu_cashflow_favorite">பிடித்த கணக்குகள்</string>
-    <string name="menu_cashflow_custom">கணக்குகளைத் தேர்ந்தெடுக்கவும்&#8230;</string>
+    <string name="menu_account_filter_all">அனைத்து கணக்குகளும்</string>
     <string name="cash_ledger">பண பேரேடு</string>
     <!-- Merge -->
     <string name="merge_take_ours">மொபைல் கோப்புகளை வைத்திருங்கள்</string>

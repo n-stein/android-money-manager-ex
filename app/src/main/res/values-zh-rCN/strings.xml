@@ -503,7 +503,6 @@
     <string name="update_prices">更新价格</string>
     <string name="update_price">更新价格</string>
     <string name="download_price">下载价格</string>
-    <string name="edit_price">编辑价格</string>
     <string name="price_updated">价格已更新</string>
     <string name="all_prices_updated">所有价格均已更新。</string>
     <string name="download_complete">下载已完成</string>
@@ -584,7 +583,6 @@
     <string name="watchlist">关注列表</string>
     <!-- edit investment transaction -->
     <string name="purchase_date">购买日期</string>
-    <string name="stock_name">股票名称</string>
     <string name="symbol">股票代码</string>
     <string name="number_of_shares">股份数目</string>
     <string name="purchase_price">买入价</string>
@@ -642,7 +640,6 @@
     <string name="budget_year">预算年度</string>
     <string name="budget_month">预算月</string>
     <string name="budget_month_optional">预算月（可选）</string>
-    <!-- string name="copy">Copy</string -->
     <string name="app_restart">此应用将关闭以应用您所做的更改。请稍后重新启动。</string>
     <string name="print">打印</string>
     <string name="min_19">打印功能需要 Android 4.4 以上版本的支持</string>
@@ -799,10 +796,7 @@
     <string name="local_file_change">本地文件变更指示器：</string>
     <string name="msg_uploading_overwrite">上传操作将覆盖您的远程版本。\n确定要继续吗？</string>
     <string name="msg_downloading_overwrite">下载操作将覆盖您的本地版本。\n确定要继续吗？</string>
-    <string name="menu_cashflow_all">所有账户</string>
-    <string name="menu_cashflow_open">打开账户</string>
-    <string name="menu_cashflow_favorite">收藏账户</string>
-    <string name="menu_cashflow_custom">选择账户</string>
+    <string name="menu_account_filter_all">所有账户</string>
     <string name="cash_ledger">现金账本</string>
     <!-- Merge -->
     <string name="merge_take_ours">保留本地版本</string>
