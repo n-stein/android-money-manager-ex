@@ -522,7 +522,7 @@
     <string name="update_price">Preis aktualisieren</string>
     <string name="download_price">Preis herunterladen</string>
     <string name="download_all_prices">Alle Preise herunterladen</string>
-    <string name="download_price_selected_date">Preis für das ausgewähltes Datum herunterladen</string>
+    <string name="download_price_selected_date">Preis für das ausgewählte Datum herunterladen</string>
     <string name="download_price_history_range">Preise für Datumsbereich herunterladen</string>
     <string name="download_for_date_range">Über Datumsbereich herunterladen</string>
     <string name="price_history">Kursverlauf</string>
