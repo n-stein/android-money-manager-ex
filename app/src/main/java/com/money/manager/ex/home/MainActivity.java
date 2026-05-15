@@ -621,7 +621,7 @@ public class MainActivity
         long itemId = item.getId();
 
         if (itemId == R.id.menu_home) {
-            initHomeFragment();
+            showFragment(HomeFragment.class);
         } else if (itemId == R.id.menu_sync) {
             SyncManager sync = new SyncManager(this);
             sync.triggerSynchronization();
@@ -1320,8 +1320,7 @@ public class MainActivity
 
         // See if the fragment is already there.
         Fragment existingFragment = getSupportFragmentManager().findFragmentByTag(tag);
-        // If the Home fragment exists and is already visible, nothing to do.
-        if (existingFragment != null && existingFragment.isVisible()) return;
+        if (existingFragment != null) return;
 
         // Create new Home fragment.
         HomeFragment fragment = new HomeFragment();
